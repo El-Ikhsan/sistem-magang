@@ -1,0 +1,20 @@
+import Joi from 'joi';
+
+const registerSchema = Joi.object({
+  name: Joi.string().min(2).max(100).required(),
+  email: Joi.string().email().max(100).required(),
+  password: Joi.string().min(6).max(255).required(),
+  role: Joi.string().valid('admin', 'user').default('user').optional(),
+});
+
+const loginSchema = Joi.object({
+  email: Joi.string().email().required(),
+  password: Joi.string().required()
+});
+
+const updateSchema = Joi.object({
+  name: Joi.string().min(2).max(100).optional(),
+  avatar_url: Joi.string().optional()
+});
+
+export { registerSchema, loginSchema, updateSchema };
