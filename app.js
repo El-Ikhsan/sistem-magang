@@ -4,6 +4,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import cookieParser from 'cookie-parser';
 
 import { errorHandler } from './src/middlewares/errorHandler.js';
 import { createBucketIfNotExists } from './config/minio.js';
@@ -30,6 +31,8 @@ app.use(cors({
   origin: process.env.CORS_ORIGIN || '*',
   credentials: true
 }));
+
+app.use(cookieParser());
 
 // Rate limiting
 const limiter = rateLimit({
