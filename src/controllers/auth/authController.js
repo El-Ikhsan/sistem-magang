@@ -1,9 +1,9 @@
-import { db } from '../../../config/database.js'; 
-import { generateToken } from '../../../config/jwt.js'; 
+import { db } from '../../../config/database.js';
+import { generateToken } from '../../../config/jwt.js';
 import bcrypt from 'bcryptjs';
-import { registerSchema, loginSchema, updateSchema } from '../../validation/auth/authValidation.js'; // Assuming you have these schemas defined in a separate file
+import { registerSchema, loginSchema, updateSchema } from '../../validation/auth/authValidation.js';
 import { uploadFile, deleteFile } from '../../utils/fileUpload.js';
-import { minioClient, bucketName } from '../../../config/minio.js';
+import { bucketName } from '../../../config/minio.js';
 import path from 'path';
 import dotenv from "dotenv";
 dotenv.config();
@@ -34,7 +34,8 @@ class AuthController {
       // Hash password
       const hashedPassword = await bcrypt.hash(password, 12);
 
-      // Create user
+      // Create user and get the ID
+      // Note: .returning('id') is more efficient for PostgreSQL, but this works for all DBs
       const [userId] = await db('users').insert({
         name,
         email,
@@ -43,23 +44,17 @@ class AuthController {
         status: 'active'
       });
 
+      // Fetch the created user without the password
       const user = await db('users')
         .select('id', 'name', 'email', 'role', 'status', 'avatar_url', 'created_at')
         .where({ id: userId })
         .first();
 
-      const token = generateToken({ 
-        id: user.id, 
-        email: user.email, 
-        role: user.role 
-      });
-
       res.status(201).json({
         success: true,
         message: 'User registered successfully',
         data: {
-          user,
-          token
+          user
         }
       });
     } catch (error) {
@@ -80,7 +75,7 @@ class AuthController {
 
       const { email, password } = value;
 
-      // Find user
+      // Find user by email and ensure they are active
       const user = await db('users').where({ email, status: 'active' }).first();
       if (!user) {
         return res.status(401).json({
@@ -98,12 +93,14 @@ class AuthController {
         });
       }
 
-      const token = generateToken({ 
-        id: user.id, 
-        email: user.email, 
-        role: user.role 
+      // Generate JWT
+      const token = generateToken({
+        id: user.id,
+        email: user.email,
+        role: user.role
       });
 
+      // Prepare user data to return (without password)
       const userData = {
         id: user.id,
         name: user.name,
@@ -150,71 +147,86 @@ class AuthController {
     }
   }
 
-    static async updateProfile(req, res, next) {
-  try {
-    const { error, value } = updateSchema.validate(req.body);
-    if (error) {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation error',
-        details: error.details.map(detail => detail.message)
-      });
-    }
-
-    let avatar_url = null;
-    const prefix = 'avatar/';
-
+  static async updateProfile(req, res, next) {
     try {
-      // Pastikan prefix folder ada di MinIO
-      const objects = [];
-      const stream = minioClient.listObjectsV2(bucketName, prefix, true);
-
-      stream.on('data', obj => objects.push(obj));
-      await new Promise(resolve => stream.on('end', resolve));
-
-      if (objects.length === 0) {
-        await minioClient.putObject(bucketName, `${prefix}.keep`, '');
+      const { error, value } = updateSchema.validate(req.body);
+      if (error) {
+        return res.status(400).json({
+          success: false,
+          message: 'Validation error',
+          details: error.details.map(detail => detail.message)
+        });
       }
 
-      // Upload avatar baru jika ada file
+      const { name, email, phone } = value;
+      let avatar_url = null;
+
+      if (email) {
+        const existingUserWithEmail = await db('users')
+          .where('email', email)
+          .andWhereNot('id', req.user.id) 
+          .first();
+        if (existingUserWithEmail) {
+          return res.status(400).json({
+            success: false,
+            message: 'Email is already in use by another account'
+          });
+        }
+      }
+      
+      const currentUser = await db('users').where({ id: req.user.id }).first();
+      if (!currentUser) {
+        return res.status(404).json({
+          success: false,
+          message: 'User not found'
+        });
+      }
+
+      // Handle avatar upload to MinIO
       if (req.file) {
+        const prefix = 'avatars/';
         const ext = path.extname(req.file.originalname) || '.jpg';
-        const objectName = `${prefix}${req.user.id}${ext}`; // Nama file unik per user
+        const objectName = `${prefix}${req.user.id}${ext}`;
 
-        // Pastikan uploadFile tidak menambah prefix lagi
-        const uploadedUrl = await uploadFile(req.file, objectName);
+        // Delete old avatar if it exists
+        if (currentUser.avatar_url) {
+          const urlPrefix = `${process.env.MINIO_PUBLIC_URL || "http://localhost:9000"}/${bucketName}/`;
+          const oldObjectName = currentUser.avatar_url.replace(urlPrefix, '');
+          await deleteFile(oldObjectName);
+        }
 
-        // Simpan URL penuh dari MinIO
-        avatar_url = `${process.env.MINIO_PUBLIC_URL || "http://localhost:9000"}/${bucketName}/${uploadedUrl}`;
-        value.avatar_url = avatar_url;
+        await uploadFile(req.file, objectName);
+        avatar_url = `${process.env.MINIO_PUBLIC_URL || "http://localhost:9000"}/${bucketName}/${objectName}`;
       }
 
-      // Update profil user
+      // Prepare data for update
+      const updateData = { name, email, phone };
+      if (avatar_url) {
+        updateData.avatar_url = avatar_url;
+      }
+
+      // Update user in the database
       await db('users')
         .where({ id: req.user.id })
-        .update(value);
+        .update(updateData);
 
+      // Fetch the fully updated user data to return
       const updatedUser = await db('users')
-        .select('id', 'name', 'email', 'role', 'status', 'avatar_url', 'updated_at')
+        .select('id', 'name', 'email', 'role', 'status', 'avatar_url', 'created_at')
         .where({ id: req.user.id })
         .first();
 
-      res.json({
+      res.status(200).json({
         success: true,
         message: 'Profile updated successfully',
-        data: { user: updatedUser }
+        data: {
+            user: updatedUser
+        }
       });
-    } catch (uploadError) {
-      if (avatar_url) {
-        await deleteFile(avatar_url.replace(minioBaseUrl + '/', '')); 
-      }
-      throw uploadError;
+    } catch (error) {
+      next(error);
     }
-  } catch (error) {
-    next(error);
   }
-}
-
 }
 
 export default AuthController;
