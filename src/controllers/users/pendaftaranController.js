@@ -18,10 +18,8 @@ class PendaftaranController {
 
       // Check if user already has pending or approved application
       const existingApplication = await db('pendaftaran')
-        .where({ 
-          user_id: req.user.id,
-          status: ['pending', 'approved']
-        })
+        .where('user_id', req.user.id) 
+        .whereIn('status', ['pending', 'approved']) 
         .first();
 
       if (existingApplication) {
@@ -48,7 +46,7 @@ class PendaftaranController {
         }
 
         // Create application
-        const [applicationId] = await db('pendaftaran').insert({
+        const [id] = await db('pendaftaran').insert({
           user_id: req.user.id,
           motivation_letter,
           start_date,
@@ -61,7 +59,7 @@ class PendaftaranController {
 
         const application = await db('pendaftaran')
           .select('*')
-          .where({ id: applicationId })
+          .where({ id })
           .first();
 
         res.status(201).json({
