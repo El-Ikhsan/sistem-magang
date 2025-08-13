@@ -1,5 +1,5 @@
 import { db } from '../../../config/database.js';
-import { generateToken } from '../../../config/jwt.js';
+import { generateToken, generateRefreshToken } from '../../../config/jwt.js';
 import bcrypt from 'bcryptjs';
 import { registerSchema, loginSchema, updateSchema } from '../../validation/auth/authValidation.js';
 import { uploadFile, deleteFile } from '../../utils/fileUpload.js';
@@ -22,7 +22,6 @@ class AuthController {
 
       const { name, email, password, role } = value;
 
-      // Check if user already exists
       const existingUser = await db('users').where({ email }).first();
       if (existingUser) {
         return res.status(400).json({
@@ -31,11 +30,8 @@ class AuthController {
         });
       }
 
-      // Hash password
       const hashedPassword = await bcrypt.hash(password, 12);
 
-      // Create user and get the ID
-      // Note: .returning('id') is more efficient for PostgreSQL, but this works for all DBs
       const [userId] = await db('users').insert({
         name,
         email,
@@ -44,7 +40,6 @@ class AuthController {
         status: 'active'
       });
 
-      // Fetch the created user without the password
       const user = await db('users')
         .select('id', 'name', 'email', 'role', 'status', 'avatar_url', 'created_at')
         .where({ id: userId })
@@ -74,8 +69,6 @@ class AuthController {
       }
 
       const { email, password } = value;
-
-      // Find user by email and ensure they are active
       const user = await db('users').where({ email, status: 'active' }).first();
       if (!user) {
         return res.status(401).json({
@@ -84,7 +77,6 @@ class AuthController {
         });
       }
 
-      // Check password
       const isValidPassword = await bcrypt.compare(password, user.password);
       if (!isValidPassword) {
         return res.status(401).json({
@@ -93,14 +85,26 @@ class AuthController {
         });
       }
 
-      // Generate JWT
-      const token = generateToken({
+      const accessToken = generateToken({
         id: user.id,
         email: user.email,
         role: user.role
       });
 
-      // Prepare user data to return (without password)
+      const refreshToken = generateRefreshToken({
+        id: user.id,
+        email: user.email
+      });
+      
+      const REFRESH_TOKEN_LIFETIME_SECONDS = 7 * 24 * 60 * 60;
+      const expiresAt = new Date(Date.now() + REFRESH_TOKEN_LIFETIME_SECONDS * 1000);
+
+      await db('refresh_tokens').insert({
+        user_id: user.id,
+        token: refreshToken,
+        expires_at: expiresAt
+      });
+      
       const userData = {
         id: user.id,
         name: user.name,
@@ -115,9 +119,58 @@ class AuthController {
         message: 'Login successful',
         data: {
           user: userData,
-          token
+          accessToken,
+          refreshToken
         }
       });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+   static async refreshToken(req, res, next) {
+    try {
+      // Data user sudah divalidasi dan dilampirkan oleh middleware
+      const { id, email } = req.user;
+
+      const user = await db('users').select('id', 'email', 'role').where({ id }).first();
+      if (!user) {
+        return res.status(404).json({ success: false, message: 'User not found' });
+      }
+
+      // Langsung buat access token baru
+      const newAccessToken = generateToken({
+        id: user.id,
+        email: user.email,
+        role: user.role
+      });
+
+      res.json({
+        success: true,
+        message: 'Access token renewed successfully',
+        data: {
+          accessToken: newAccessToken
+        }
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+static async logout(req, res, next) {
+    try {
+      // Ambil user ID dari request yang sudah diproses oleh middleware autentikasi
+      const userId = req.user.id;
+
+      if (!userId) {
+        // Seharusnya tidak terjadi jika middleware berjalan dengan benar
+        return res.status(401).json({ success: false, message: 'Authentication error: User ID not found.' });
+      }
+
+      // Hapus semua refresh token dari database yang cocok dengan user_id
+      await db('refresh_tokens').where({ user_id: userId }).del();
+      
+      res.status(200).json({ success: true, message: 'Successfully logged out from all devices' });
     } catch (error) {
       next(error);
     }
@@ -164,7 +217,7 @@ class AuthController {
       if (email) {
         const existingUserWithEmail = await db('users')
           .where('email', email)
-          .andWhereNot('id', req.user.id) 
+          .andWhereNot('id', req.user.id)
           .first();
         if (existingUserWithEmail) {
           return res.status(400).json({
@@ -173,7 +226,7 @@ class AuthController {
           });
         }
       }
-      
+
       const currentUser = await db('users').where({ id: req.user.id }).first();
       if (!currentUser) {
         return res.status(404).json({
@@ -181,14 +234,12 @@ class AuthController {
           message: 'User not found'
         });
       }
-
-      // Handle avatar upload to MinIO
+      
       if (req.file) {
         const prefix = 'avatars/';
         const ext = path.extname(req.file.originalname) || '.jpg';
         const objectName = `${prefix}${req.user.id}${ext}`;
 
-        // Delete old avatar if it exists
         if (currentUser.avatar_url) {
           const urlPrefix = `${process.env.MINIO_PUBLIC_URL || "http://localhost:9000"}/${bucketName}/`;
           const oldObjectName = currentUser.avatar_url.replace(urlPrefix, '');
@@ -198,19 +249,16 @@ class AuthController {
         await uploadFile(req.file, objectName);
         avatar_url = `${process.env.MINIO_PUBLIC_URL || "http://localhost:9000"}/${bucketName}/${objectName}`;
       }
-
-      // Prepare data for update
+      
       const updateData = { name, email, phone };
       if (avatar_url) {
         updateData.avatar_url = avatar_url;
       }
-
-      // Update user in the database
+      
       await db('users')
         .where({ id: req.user.id })
         .update(updateData);
-
-      // Fetch the fully updated user data to return
+      
       const updatedUser = await db('users')
         .select('id', 'name', 'email', 'role', 'status', 'avatar_url', 'created_at')
         .where({ id: req.user.id })
@@ -220,7 +268,7 @@ class AuthController {
         success: true,
         message: 'Profile updated successfully',
         data: {
-            user: updatedUser
+          user: updatedUser
         }
       });
     } catch (error) {
