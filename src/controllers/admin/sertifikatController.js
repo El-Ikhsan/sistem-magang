@@ -1,6 +1,6 @@
 import { db } from '../../../config/database.js';
 import { uploadFile, deleteFile } from '../../utils/fileUpload.js';
-import { sertifikatSchema } from '../../validation/admin/sertifikatValidation.js';
+import { sertifikatSchema, deleteManySertifikatSchema } from '../../validation/admin/sertifikatValidation.js';
 import { bucketName } from '../../../config/minio.js';
 import path from 'path';
 
@@ -70,7 +70,7 @@ class SertifikatController {
             }
 
             // 6. Save certificate to the database
-            const [sertifikatId] = await db('sertifikat').insert({
+            const [id] = await db('sertifikat').insert({
                 user_id,
                 certificate_number,
                 file_url,
@@ -89,7 +89,7 @@ class SertifikatController {
                 )
                 .leftJoin('users', 'sertifikat.user_id', 'users.id')
                 .leftJoin('users as admin', 'sertifikat.issued_by', 'admin.id')
-                .where('sertifikat.id', sertifikatId)
+                .where('sertifikat.id', id)
                 .first();
 
             res.status(201).json({
@@ -139,17 +139,18 @@ class SertifikatController {
                     'sertifikat.*',
                     'users.name as user_name',
                     'users.email as user_email',
-                    'users.university',
+                    'institutions.name as institution_name', // TAMBAHKAN: Ambil nama institusi
                     'admin.name as issued_by_name'
                 )
                 .leftJoin('users', 'sertifikat.user_id', 'users.id')
-                .leftJoin('users as admin', 'sertifikat.issued_by', 'admin.id');
+                .leftJoin('users as admin', 'sertifikat.issued_by', 'admin.id')
+                .leftJoin('institutions', 'users.id', 'institutions.user_id'); // TAMBAHKAN: Join ke tabel institutions
 
             if (search) {
                 query = query.where(function() {
                     this.where('users.name', 'like', `%${search}%`)
                         .orWhere('sertifikat.certificate_number', 'like', `%${search}%`)
-                        .orWhere('users.university', 'like', `%${search}%`);
+                        .orWhere('institutions.name', 'like', `%${search}%`); // TAMBAHKAN: Cari juga di nama institusi
                 });
             }
             
@@ -203,6 +204,57 @@ class SertifikatController {
                 success: true,
                 message: 'Certificate deleted successfully'
             });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    static async deleteManySertifikat(req, res, next) {
+        try {
+            // 1. Validasi input
+            const { error, value } = deleteManySertifikatSchema.validate(req.body);
+            if (error) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Validation error',
+                    details: error.details.map(d => d.message)
+                });
+            }
+            const { ids } = value;
+
+            // 2. Ambil data sertifikat yang akan dihapus untuk mendapatkan file_url
+            const sertifikatsToDelete = await db('sertifikat')
+                .whereIn('id', ids)
+                .select('id', 'file_url');
+
+            if (sertifikatsToDelete.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'No matching certificates found to delete.'
+                });
+            }
+
+            // 3. Hapus file-file terkait dari MinIO
+            const deleteFilePromises = sertifikatsToDelete.map(sertifikat => {
+                if (sertifikat.file_url) {
+                    const urlPrefix = `${process.env.MINIO_PUBLIC_URL}/${bucketName}/`;
+                    const objectName = sertifikat.file_url.replace(urlPrefix, '');
+                    return deleteFile(objectName);
+                }
+                return Promise.resolve(); // Kembalikan promise yang langsung selesai jika tidak ada file
+            });
+
+            // Jalankan semua promise penghapusan file secara paralel
+            await Promise.all(deleteFilePromises);
+
+            // 4. Hapus record sertifikat dari database
+            const deletedCount = await db('sertifikat').whereIn('id', ids).del();
+
+            res.status(200).json({
+                success: true,
+                message: `${deletedCount} certificate(s) deleted successfully.`
+            });
+
         } catch (error) {
             next(error);
         }

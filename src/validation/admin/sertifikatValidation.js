@@ -6,3 +6,7 @@ export const sertifikatSchema = Joi.object({
   description: Joi.string().optional(),
   issued_date: Joi.date().iso().required()
 });
+
+export const deleteManySertifikatSchema = Joi.object({
+  ids: Joi.array().items(Joi.string().uuid().required()).min(1).required(),
+});

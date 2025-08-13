@@ -17,6 +17,10 @@ router.get('/',
   SertifikatController.getAllSertifikat
 );
 
+router.post('/delete-many', 
+  SertifikatController.deleteManySertifikat
+);
+
 router.get('/:userId', 
   SertifikatController.getSertifikatByUserId
 );
@@ -24,5 +28,8 @@ router.get('/:userId',
 router.delete('/:id', 
   SertifikatController.deleteSertifikat
 );
+
+
+
 
 export default router;
