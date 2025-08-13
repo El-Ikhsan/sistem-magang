@@ -7,6 +7,7 @@ export const up = function(knex) {
     table.uuid("id").primary().defaultTo(knex.raw("(UUID())"));
     table.string('user_id', 36).notNullable();
     table.date('tanggal').notNullable();
+    table.enum('kehadiran', ['wfo', 'wfh', 'izin', 'sakit']).notNullable();
     table.string('kegiatan', 500).notNullable();
     table.text('deskripsi');
     table.time('jam_mulai');

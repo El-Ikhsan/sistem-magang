@@ -169,53 +169,56 @@ export const seed = async function (knex) {
   ]);
 
   // Insert logbook entries
-  await knex('logbook').insert([
-    {
-      id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-      user_id: '22222222-2222-2222-2222-222222222222', // Budi's logbook
-      tanggal: '2024-06-03',
-      kegiatan: 'Orientasi perusahaan',
-      deskripsi: 'Pengenalan struktur organisasi dan budaya perusahaan',
-      jam_mulai: '08:00',
-      jam_selesai: '12:00',
-      status: 'validated',
-      admin_feedback: 'Baik, user aktif dalam orientasi',
-      validated_by: '11111111-1111-1111-1111-111111111111',
-      validated_at: knex.fn.now(),
-      created_at: knex.fn.now(),
-      updated_at: knex.fn.now()
-    },
-    {
-      id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
-      user_id: '22222222-2222-2222-2222-222222222222', // Budi's logbook
-      tanggal: '2024-06-04',
-      kegiatan: 'Pelatihan dasar sistem',
-      deskripsi: 'Mempelajari alur kerja dan tools yang digunakan',
-      jam_mulai: '08:00',
-      jam_selesai: '17:00',
-      status: 'validated',
-      admin_feedback: 'Pemahaman baik terhadap sistem',
-      validated_by: '11111111-1111-1111-1111-111111111111',
-      validated_at: knex.fn.now(),
-      created_at: knex.fn.now(),
-      updated_at: knex.fn.now()
-    },
-    {
-      id: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
-      user_id: '33333333-3333-3333-3333-333333333333', // Ani's logbook
-      tanggal: '2024-07-02',
-      kegiatan: 'Pengenalan tim',
-      deskripsi: 'Berkenalan dengan mentor dan anggota tim',
-      jam_mulai: '09:00',
-      jam_selesai: '12:00',
-      status: 'pending',
-      admin_feedback: null,
-      validated_by: null,
-      validated_at: null,
-      created_at: knex.fn.now(),
-      updated_at: knex.fn.now()
-    }
-  ]);
+await knex('logbook').insert([
+  {
+    id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+    user_id: '22222222-2222-2222-2222-222222222222', // Budi's logbook
+    tanggal: '2024-06-03',
+    kehadiran: 'wfo', // TAMBAHKAN: Status kehadiran
+    kegiatan: 'Orientasi perusahaan',
+    deskripsi: 'Pengenalan struktur organisasi dan budaya perusahaan',
+    jam_mulai: '08:00',
+    jam_selesai: '12:00',
+    status: 'validated',
+    admin_feedback: 'Baik, user aktif dalam orientasi',
+    validated_by: '11111111-1111-1111-1111-111111111111',
+    validated_at: knex.fn.now(),
+    created_at: knex.fn.now(),
+    updated_at: knex.fn.now()
+  },
+  {
+    id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+    user_id: '22222222-2222-2222-2222-222222222222', // Budi's logbook
+    tanggal: '2024-06-04',
+    kehadiran: 'wfh', // TAMBAHKAN: Status kehadiran
+    kegiatan: 'Pelatihan dasar sistem',
+    deskripsi: 'Mempelajari alur kerja dan tools yang digunakan',
+    jam_mulai: '08:00',
+    jam_selesai: '17:00',
+    status: 'validated',
+    admin_feedback: 'Pemahaman baik terhadap sistem',
+    validated_by: '11111111-1111-1111-1111-111111111111',
+    validated_at: knex.fn.now(),
+    created_at: knex.fn.now(),
+    updated_at: knex.fn.now()
+  },
+  {
+    id: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+    user_id: '33333333-3333-3333-3333-333333333333', // Ani's logbook
+    tanggal: '2024-07-02',
+    kehadiran: 'wfo', // TAMBAHKAN: Status kehadiran
+    kegiatan: 'Pengenalan tim',
+    deskripsi: 'Berkenalan dengan mentor dan anggota tim',
+    jam_mulai: '09:00',
+    jam_selesai: '12:00',
+    status: 'pending',
+    admin_feedback: null,
+    validated_by: null,
+    validated_at: null,
+    created_at: knex.fn.now(),
+    updated_at: knex.fn.now()
+  }
+]);
 
   // Insert sertifikat (certificates)
   await knex('sertifikat').insert([
