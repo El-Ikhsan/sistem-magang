@@ -7,12 +7,8 @@ const router = express.Router();
 router.use(authenticate);
 router.use(authorizeRole('admin'));
 
-router.get('/', 
-  LogbookController.getAllLogbook
-);
-
-router.patch('/:id/validate', 
-  LogbookController.validateLogbook
-);
+router.get('/', LogbookController.getAllLogbook);
+router.patch('/:id/validate', LogbookController.validateLogbook);
+router.post('/validate-many', LogbookController.validateManyLogbook);
 
 export default router;
