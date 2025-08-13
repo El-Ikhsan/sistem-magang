@@ -20,7 +20,7 @@ class AuthController {
         });
       }
 
-      const { name, email, password, role } = value;
+      const { name, email, password} = value;
 
       const existingUser = await db('users').where({ email }).first();
       if (existingUser) {
@@ -32,17 +32,17 @@ class AuthController {
 
       const hashedPassword = await bcrypt.hash(password, 12);
 
-      const [userId] = await db('users').insert({
+      const [id] = await db('users').insert({
         name,
         email,
         password: hashedPassword,
-        role: role || 'user',
-        status: 'active'
+        role: 'user',
+        status: 'inactive'
       });
 
       const user = await db('users')
         .select('id', 'name', 'email', 'role', 'status', 'avatar_url', 'created_at')
-        .where({ id: userId })
+        .where({ id })
         .first();
 
       res.status(201).json({
@@ -69,7 +69,7 @@ class AuthController {
       }
 
       const { email, password } = value;
-      const user = await db('users').where({ email, status: 'active' }).first();
+      const user = await db('users').where({ email }).first();
       if (!user) {
         return res.status(401).json({
           success: false,
@@ -105,6 +105,11 @@ class AuthController {
         expires_at: expiresAt
       });
       
+      if (user.status === 'inactive') {
+        await db('users').where({ id: user.id }).update({ status: 'active' });
+        user.status = 'active';
+      }
+
       const userData = {
         id: user.id,
         name: user.name,
@@ -131,7 +136,7 @@ class AuthController {
    static async refreshToken(req, res, next) {
     try {
       // Data user sudah divalidasi dan dilampirkan oleh middleware
-      const { id, email } = req.user;
+      const { id } = req.user;
 
       const user = await db('users').select('id', 'email', 'role').where({ id }).first();
       if (!user) {
@@ -166,6 +171,8 @@ static async logout(req, res, next) {
         // Seharusnya tidak terjadi jika middleware berjalan dengan benar
         return res.status(401).json({ success: false, message: 'Authentication error: User ID not found.' });
       }
+
+      await db('users').where({ email: req.user.email }).update({ status: 'inactive' })
 
       // Hapus semua refresh token dari database yang cocok dengan user_id
       await db('refresh_tokens').where({ user_id: userId }).del();
@@ -241,13 +248,13 @@ static async logout(req, res, next) {
         const objectName = `${prefix}${req.user.id}${ext}`;
 
         if (currentUser.avatar_url) {
-          const urlPrefix = `${process.env.MINIO_PUBLIC_URL || "http://localhost:9000"}/${bucketName}/`;
+          const urlPrefix = `${process.env.MINIO_PUBLIC_URL}/${bucketName}/`;
           const oldObjectName = currentUser.avatar_url.replace(urlPrefix, '');
           await deleteFile(oldObjectName);
         }
 
         await uploadFile(req.file, objectName);
-        avatar_url = `${process.env.MINIO_PUBLIC_URL || "http://localhost:9000"}/${bucketName}/${objectName}`;
+        avatar_url = `${process.env.MINIO_PUBLIC_URL}/${bucketName}/${objectName}`;
       }
       
       const updateData = { name, email, phone };

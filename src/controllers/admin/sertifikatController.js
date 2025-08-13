@@ -66,7 +66,7 @@ class SertifikatController {
                 const objectName = `${prefix}${user_id}${ext}`;
 
                 await uploadFile(req.file, objectName);
-                file_url = `${process.env.MINIO_PUBLIC_URL || 'http://localhost:9000'}/${bucketName}/${objectName}`;
+                file_url = `${process.env.MINIO_PUBLIC_URL}/${bucketName}/${objectName}`;
             }
 
             // 6. Save certificate to the database
@@ -192,7 +192,7 @@ class SertifikatController {
 
             if (sertifikat.file_url) {
                 // FIX: Extract the object name from the full URL before deleting
-                const urlPrefix = `${process.env.MINIO_PUBLIC_URL || 'http://localhost:9000'}/${bucketName}/`;
+                const urlPrefix = `${process.env.MINIO_PUBLIC_URL}/${bucketName}/`;
                 const objectName = sertifikat.file_url.replace(urlPrefix, '');
                 await deleteFile(objectName);
             }
