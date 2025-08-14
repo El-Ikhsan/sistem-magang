@@ -10,14 +10,25 @@ export const POST = async (request) => {
         const response = await Axios.post(API_ENDPOINTS.LOGINUSERS, { email, password });
 
         const data = response.data;
-
         const nextResponse = NextResponse.json(data);
 
-        if (data.token) {
+        // Handle different response formats for token storage
+        let tokenToStore = null;
+
+        // Format 1: Local backend with nested structure
+        if (data.success && data.data && data.data.accessToken) {
+            tokenToStore = data.data.accessToken;
+        }
+        // Format 2: Remote backend with direct token field
+        else if (data.status === '00' && data.token) {
+            tokenToStore = data.token;
+        }
+
+        if (tokenToStore) {
             // Cookie settings yang lebih robust untuk production
             const cookieOptions = {
                 name: "authToken",
-                value: data.token,
+                value: tokenToStore,
                 httpOnly: false, // Perlu false agar bisa diakses client-side
                 path: "/",
                 maxAge: 60 * 60 * 24, // 24 jam
@@ -38,7 +49,10 @@ export const POST = async (request) => {
         if (isAxiosError(err) && err.response) {
             return NextResponse.json(err.response.data, { status: err.response.status });
         }
-        console.error("[API LOGIN PROXY]", err);
-        return NextResponse.json({ message: "Gagal terhubung ke server backend." }, { status: 500 });
+
+        return NextResponse.json({
+            success: false,
+            message: "Gagal terhubung ke server backend."
+        }, { status: 500 });
     }
 };

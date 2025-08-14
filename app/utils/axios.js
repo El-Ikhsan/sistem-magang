@@ -1,8 +1,7 @@
 import axios from "axios";
-import { API_URL } from "../../app/api/api.js";
 
 export const Axios = axios.create({
-    baseURL: API_URL,
+    baseURL: "", // Remove base URL to avoid duplication
     headers: {
         "Content-Type": "application/json"
     },
@@ -14,10 +13,6 @@ export const Axios = axios.create({
 // Request interceptor untuk debugging
 Axios.interceptors.request.use(
     (config) => {
-        // Log untuk debugging di development
-        if (process.env.NODE_ENV === 'development') {
-            console.log('API Request:', config.baseURL + config.url);
-        }
         return config;
     },
     (error) => {

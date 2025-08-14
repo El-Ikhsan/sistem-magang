@@ -36,47 +36,65 @@ const LoginPage = () => {
 
             const result = await res.json();
 
-            if (res.ok && result.status === "00") {
-                toastRef.current?.show({severity:'success', summary: 'Success', detail: result.message});
+            // Handle both response formats
+            // Format 1: success: true (local backend)
+            // Format 2: status: '00' (remote backend)
+            const isSuccess = (res.ok && result.success) || (res.ok && result.status === '00');
 
-                const userRole = result.role;
+            if (isSuccess) {
+                toastRef.current?.show({
+                    severity: 'success',
+                    summary: 'Success',
+                    detail: result.message
+                });
 
+                // Ambil role dari response data (handle both formats)
+                let userRole;
+                if (result.data && result.data.user && result.data.user.role) {
+                    // Format 1: nested structure
+                    userRole = result.data.user.role;
+                } else if (result.role) {
+                    // Format 2: direct role field
+                    userRole = result.role;
+                }
+
+                // Redirect berdasarkan role
                 let redirectPath;
-
                 switch (userRole) {
                     case "admin":
                         redirectPath = "/admin/dashboard";
                         break;
-                    case "employee":
-                        redirectPath = "/employee/dashboard";
-                        break;
-                    case "technician":
-                        redirectPath = "/technician/dashboard";
-                        break;
-                    case "manager":
-                        redirectPath = "/manager/dashboard";
-                        break;
-                    case "logistics":
-                        redirectPath = "/logistics/dashboard";
+                    case "user":
+                        redirectPath = "/user/dashboard";
                         break;
                     default:
                         redirectPath = "/dashboard";
                         break;
                 }
 
-                router.push(redirectPath);
+                setTimeout(() => {
+                    router.push(redirectPath);
+                }, 1000);
 
             } else {
-                toastRef.current?.show({ severity: "error", summary: "Gagal", detail: result.message || "Email atau Password salah.", life: 3000 });
+                toastRef.current?.show({
+                    severity: "error",
+                    summary: "Gagal",
+                    detail: result.message || "Email atau Password salah.",
+                    life: 3000
+                });
             }
         } catch (error) {
-            console.error("Terjadi kesalahan:", error);
+            toastRef.current?.show({
+                severity: "error",
+                summary: "Error",
+                detail: "Terjadi kesalahan saat login",
+                life: 3000
+            });
         } finally {
             setLoading(false);
         }
-    };
-
-    const containerClassName = classNames("surface-ground flex align-items-center justify-content-center min-h-screen min-w-full overflow-hidden", { "p-input-filled": layoutConfig.inputStyle === "filled" });
+    };    const containerClassName = classNames("surface-ground flex align-items-center justify-content-center min-h-screen min-w-full overflow-hidden", { "p-input-filled": layoutConfig.inputStyle === "filled" });
 
     return (
         <div className={containerClassName}>
