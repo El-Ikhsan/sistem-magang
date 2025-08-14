@@ -20,23 +20,130 @@ const AppMenu = () => {
     const [menuGroups, setMenuGroups] = useState([]);
 
     useEffect(() => {
-        setMenuGroups([
-            {
-                label: "OVERVIEW",
-                items: [
-                    {
-                        label: "Dashboard",
-                        icon: "pi pi-fw pi-home",
-                        to: "/admin/dashboard"
-                    }
-                ]
+        // Get user role from token
+        const token = Cookies.get("authToken");
+        if (token) {
+            try {
+                const decoded = jwtDecode(token);
+                setUserRole(decoded.role);
+            } catch (error) {
+                console.error("Error decoding token:", error);
+                setUserRole(null);
             }
-        ]);
+        }
     }, []);
+
+    useEffect(() => {
+        // Set menu based on user role
+        if (userRole === "admin") {
+            setMenuGroups([
+                {
+                    label: "OVERVIEW",
+                    items: [
+                        {
+                            label: "Dashboard",
+                            icon: "pi pi-fw pi-home",
+                            to: "/admin/dashboard"
+                        }
+                    ]
+                },
+                {
+                    label: "MANAJEMEN",
+                    items: [
+                        {
+                            label: "User Management",
+                            icon: "pi pi-fw pi-users",
+                            to: "/admin/users"
+                        },
+                        {
+                            label: "Pendaftaran",
+                            icon: "pi pi-fw pi-file-edit",
+                            to: "/admin/pendaftaran"
+                        },
+                        {
+                            label: "Logbook",
+                            icon: "pi pi-fw pi-book",
+                            to: "/admin/logbook"
+                        },
+                        {
+                            label: "Sertifikat",
+                            icon: "pi pi-fw pi-award",
+                            to: "/admin/sertifikat"
+                        }
+                    ]
+                }
+            ]);
+        } else if (userRole === "user") {
+            setMenuGroups([
+                {
+                    label: "OVERVIEW",
+                    items: [
+                        {
+                            label: "Dashboard",
+                            icon: "pi pi-fw pi-home",
+                            to: "/user/dashboard"
+                        }
+                    ]
+                },
+                {
+                    label: "AKTIVITAS",
+                    items: [
+                        {
+                            label: "Pendaftaran",
+                            icon: "pi pi-fw pi-file-edit",
+                            to: "/user/pendaftaran"
+                        },
+                        {
+                            label: "Logbook",
+                            icon: "pi pi-fw pi-book",
+                            to: "/user/logbook"
+                        },
+                        {
+                            label: "Sertifikat",
+                            icon: "pi pi-fw pi-award",
+                            to: "/user/sertifikat"
+                        }
+                    ]
+                },
+                {
+                    label: "PROFIL",
+                    items: [
+                        {
+                            label: "Profil Saya",
+                            icon: "pi pi-fw pi-user",
+                            to: "/user/profile"
+                        }
+                    ]
+                }
+            ]);
+        } else {
+            // Default menu jika role tidak dikenali
+            setMenuGroups([]);
+        }
+    }, [userRole]);
 
     const handleNavigation = (e, to) => {
         e.preventDefault();
         router.push(to);
+    };
+
+    const handleLogout = async () => {
+        try {
+            await fetch("/api/auth/logout", {
+                method: "POST",
+            });
+
+            // Clear cookie
+            Cookies.remove("authToken");
+
+            // Redirect to login
+            router.push("/auth/login");
+        } catch (error) {
+            console.error("Logout error:", error);
+            // Force logout even if API fails
+            Cookies.remove("authToken");
+            router.push("/auth/login");
+        }
     };
 
     return (
@@ -76,6 +183,20 @@ const AppMenu = () => {
                         </ul>
                     </div>
                 ))}
+
+                {/* Logout Section */}
+                {userRole && (
+                    <div className="mt-auto pt-4 border-top-1 surface-border">
+                        <div className="px-2">
+                            <Button
+                                icon="pi pi-sign-out"
+                                label="Logout"
+                                className="w-full p-button-outlined p-button-danger"
+                                onClick={handleLogout}
+                            />
+                        </div>
+                    </div>
+                )}
             </div>
 
             <Dialog
