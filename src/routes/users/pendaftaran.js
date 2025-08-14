@@ -17,13 +17,7 @@ const uploadPendaftaran = uploadFields([
 ]);
 
 // Peserta routes
-router.post('/', 
-  uploadPendaftaran,
-  PendaftaranController.submitPendaftaran
-);
-
-router.get('/me', 
-  PendaftaranController.getMyPendaftaran
-);
+router.post('/', uploadPendaftaran, PendaftaranController.submitPendaftaran);
+router.get('/me', PendaftaranController.getMyPendaftaran);
 
 export default router;
