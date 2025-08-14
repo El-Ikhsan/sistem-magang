@@ -7,16 +7,10 @@ const router = express.Router();
 router.use(authenticate);
 router.use(authorizeRole('user'));
 
-router.post('/', 
-  LogbookController.createLogbook
-);
-
-router.get('/me', 
-  LogbookController.getMyLogbook
-);
-
-router.put('/:id', 
-  LogbookController.updateLogbook
-);
+router.post('/', LogbookController.createLogbook);
+router.get('/me', LogbookController.getMyLogbook);
+router.patch('/:id', LogbookController.updateLogbook);
+router.delete('/:id', LogbookController.deleteLogbook);
+router.post('/delete-many', LogbookController.deleteManyLogbook);
 
 export default router;
