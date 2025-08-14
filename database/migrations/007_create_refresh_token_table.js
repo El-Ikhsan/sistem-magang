@@ -6,7 +6,7 @@ export const up = function (knex) {
   return knex.schema.createTable('refresh_tokens', function (table) {
     table.uuid("id").primary().defaultTo(knex.raw("(UUID())"));
     table.uuid("user_id").notNullable();
-    table.text("token").notNullable().unique();
+    table.string("token", 255).notNullable().unique();
     table.timestamp("expires_at").notNullable();
     table.timestamps(true, true);
     
