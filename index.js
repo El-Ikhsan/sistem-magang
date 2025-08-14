@@ -1,3 +1,3 @@
-// run `node index.js` in the terminal
+import { logger } from './config/logger.js';
 
-console.log(`Hello Node.js v${process.versions.node}!`);
+logger.info(`Hello Node.js v${process.versions.node}!`);

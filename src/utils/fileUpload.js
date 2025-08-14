@@ -1,5 +1,6 @@
 import { minioClient, bucketName } from '../../config/minio.js';
 import path from 'path';
+import { logger } from '../../config/logger.js';
 
 const uploadFile = async (file, fileName) => {
   try {
@@ -19,7 +20,7 @@ const deleteFile = async (fileName) => {
     return true;
   } catch (error) {
     if (error.code === 'NotFound' || error.code === 'NoSuchKey') {
-      console.log(`File ${fileName} not found in bucket, skipping delete.`);
+      logger.info(`File ${fileName} not found in bucket, skipping delete.`);
       return false;
     }
     console.error(`Error deleting file ${fileName}:`, error);

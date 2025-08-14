@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import { logger } from '../../config/logger.js';
 
 /**
  * @param {import('knex').Knex} knex
@@ -235,5 +236,5 @@ await knex('logbook').insert([
     }
   ]);
 
-  console.log('✅ Database seeded successfully!');
+  logger.info('✅ Database seeded successfully!');
 };

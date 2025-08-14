@@ -1,4 +1,5 @@
 import * as Minio from 'minio';
+import { logger } from './logger.js';
 
 const minioClient = new Minio.Client({
   endPoint: process.env.MINIO_ENDPOINT || 'localhost',
@@ -16,7 +17,7 @@ const createBucketIfNotExists = async () => {
 
     if (!exists) {
       await minioClient.makeBucket(bucketName, 'us-east-1');
-      console.log(`✅ Bucket ${bucketName} created`);
+      logger.info(`✅ Bucket ${bucketName} created`);
 
       // Set public read-only policy
       const policy = {
@@ -32,9 +33,9 @@ const createBucketIfNotExists = async () => {
       };
 
       await minioClient.setBucketPolicy(bucketName, JSON.stringify(policy));
-      console.log(`✅ Public read policy set for bucket ${bucketName}`);
+      logger.info(`✅ Public read policy set for bucket ${bucketName}`);
     } else {
-      console.log(`ℹ️ Bucket ${bucketName} already exists`);
+      logger.info(`ℹ️ Bucket ${bucketName} already exists`);
     }
 
   } catch (error) {
