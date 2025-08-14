@@ -46,7 +46,7 @@ class PendaftaranController {
         }
 
         // Create application
-        const [id] = await db('pendaftaran').insert({
+        await db('pendaftaran').insert({
           user_id: req.user.id,
           motivation_letter,
           start_date,
@@ -57,15 +57,15 @@ class PendaftaranController {
           status: 'pending'
         });
 
-        const application = await db('pendaftaran')
+        const pendaftaran = await db('pendaftaran')
           .select('*')
-          .where({ id })
+          .where({ user_id: req.user.id })
           .first();
 
         res.status(201).json({
           success: true,
           message: 'Application submitted successfully',
-          data: { application }
+          data: { pendaftaran }
         });
       } catch (uploadError) {
         // Clean up uploaded files if database insert fails
