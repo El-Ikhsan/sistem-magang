@@ -1,0 +1,147 @@
+.layout-sidebar {
+    position: fixed;
+    width: 300px;
+    height: calc(100vh - 9rem);
+    z-index: 999;
+    overflow-y: auto;
+    user-select: none;
+    top: 7rem;
+    left: 2rem;
+    transition: transform $transitionDuration, left $transitionDuration;
+    background-color: var(--surface-overlay);
+    border-radius: $borderRadius;
+    padding: 0.5rem 1rem;
+    box-shadow: 0px 3px 5px rgba(0, 0, 0, .02), 0px 0px 2px rgba(0, 0, 0, .05), 0px 1px 4px rgba(0, 0, 0, .08);
+}
+
+.layout-menu {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+    user-select: none;
+
+    .layout-root-menuitem {
+        >.layout-menuitem-root-text {
+            font-size: .857rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--surface-900);
+            margin: .75rem 0;
+        }
+
+        > a {
+            display: none;
+        }
+    }
+
+    li {
+        position: relative;
+        margin-bottom: 0.25rem;
+        
+        &.has-submenu {
+            > div {
+                cursor: pointer;
+            }
+        }
+
+        .layout-menuitem-root {
+            display: flex;
+            align-items: center;
+            position: relative;
+            outline: 0 none;
+            color: var(--text-color);
+            cursor: pointer;
+            padding: 0.5rem 0.75rem;
+            border-radius: $borderRadius;
+            transition: all $transitionDuration;
+            justify-content: space-between;
+            width: 100%;
+
+            .layout-menuitem-icon {
+                margin-right: .5rem;
+                transition: transform $transitionDuration;
+            }
+
+            .layout-submenu-toggler {
+                font-size: 75%;
+                margin-left: auto;
+                
+                transition: transform $transitionDuration;
+                
+                &.rotated {
+                    transform: rotate(-180deg);
+                }
+            }
+
+            &.active-route {
+                font-weight: 700;
+                color: var(--primary-color);
+            }
+
+            &:hover {
+                background-color: var(--surface-hover);
+            }
+
+            &:focus {
+                @include focused-inset();
+            }
+        }
+
+        &.active-menuitem {
+            > .layout-menuitem-root {
+                background-color: var(--surface-hover);
+            }
+        }
+    }
+
+    .layout-submenu {
+        overflow: hidden;
+        max-height: 0;
+        margin: 0;
+        padding: 0;
+        list-style-type: none;
+        border-left: 1px solid var(--surface-border);
+        margin-left: 1.5rem;
+        padding-left: 0.5rem;
+        transition: max-height 0.3s ease-out, opacity 0.2s ease;
+        opacity: 0;
+
+        li {
+            a {
+                display: flex;
+                align-items: center;
+                position: relative;
+                outline: 0 none;
+                color: var(--text-color);
+                cursor: pointer;
+                padding: 0.5rem 1rem;
+                border-radius: $borderRadius;
+                transition: all $transitionDuration;
+
+                .layout-menuitem-icon {
+                    margin-right: .5rem;
+                }
+
+                &:hover {
+                    background-color: var(--surface-hover);
+                    color: var(--primary-color);
+                }
+
+                &.active-route {
+                    font-weight: 700;
+                    color: var(--primary-color);
+                }
+            }
+        }
+
+        &.submenu-visible {
+            max-height: 500px;
+            opacity: 1;
+        }
+    }
+
+    .menu-separator {
+        border-top: 1px solid var(--surface-border);
+        margin: 1rem 0;
+    }
+}
