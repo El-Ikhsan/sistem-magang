@@ -20,7 +20,6 @@ export const up = function(knex) {
 
     table.foreign('user_id').references('id').inTable('users').onDelete('CASCADE');
     table.foreign('validated_by').references('id').inTable('users');
-    table.unique(['user_id', 'tanggal']);
     table.index(['user_id']);
     table.index(['status']);
     table.index(['tanggal']);

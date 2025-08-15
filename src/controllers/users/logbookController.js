@@ -27,19 +27,21 @@ class LogbookController {
 
       // TAMBAHKAN: Ambil 'kehadiran' dari value yang sudah divalidasi
       const { tanggal, kehadiran, kegiatan, deskripsi, jam_mulai, jam_selesai } = value;
+      const formattedDate = new Date(tanggal).toISOString().split('T')[0];
 
-      const existingLogbook = await db('logbook')
-        .where({ 
-          user_id: req.user.id,
-          tanggal 
-        })
-        .first();
+       const existingActiveLogbook = await db('logbook')
+          .where({
+              user_id: req.user.id,
+              tanggal: formattedDate 
+          })
+          .whereIn('status', ['pending', 'validated']) 
+          .first();
 
-      if (existingLogbook) {
-        return res.status(400).json({
-          success: false,
-          message: 'Logbook entry for this date already exists'
-        });
+      if (existingActiveLogbook) {
+          return res.status(409).json({ // 409 Conflict lebih cocok
+              success: false,
+              message: 'You already have an active (pending or validated) logbook entry for this date.'
+          });
       }
 
       // Buat objek untuk dimasukkan ke database
@@ -57,7 +59,7 @@ class LogbookController {
 
       await db('logbook').insert(logbookData);
 
-      const formattedDate = new Date(tanggal).toISOString().split('T')[0];
+      
       const logbook = await db('logbook')
         .select('*')
         .where({
