@@ -59,86 +59,84 @@ class AuthController {
 
   static async login(req, res, next) {
     try {
-      const { error, value } = loginSchema.validate(req.body);
-      if (error) {
-        return res.status(400).json({
-          success: false,
-          message: 'Validation error',
-          details: error.details.map(detail => detail.message)
-        });
-      }
-
-      const { email, password } = value;
-      const user = await db('users').where({ email }).first();
-      if (!user) {
-        return res.status(401).json({
-          success: false,
-          message: 'Invalid email or password'
-        });
-      }
-
-      const isValidPassword = await bcrypt.compare(password, user.password);
-      if (!isValidPassword) {
-        return res.status(401).json({
-          success: false,
-          message: 'Invalid email or password'
-        });
-      }
-
-      const accessToken = generateToken({
-        id: user.id,
-        email: user.email,
-        role: user.role
-      });
-
-      const refreshToken = generateRefreshToken({
-        id: user.id,
-        email: user.email
-      });
-      
-      const REFRESH_TOKEN_LIFETIME_SECONDS = 7 * 24 * 60 * 60;
-      const expiresAt = new Date(Date.now() + REFRESH_TOKEN_LIFETIME_SECONDS * 1000);
-
-      await db('refresh_tokens').insert({
-        user_id: user.id,
-        token: refreshToken,
-        expires_at: expiresAt
-      });
-      
-      if (user.status === 'inactive') {
-        await db('users').where({ id: user.id }).update({ status: 'active' });
-        user.status = 'active';
-      }
-
-      const userData = {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        status: user.status,
-        avatar_url: user.avatar_url
-      };
-
-      res.json({
-        success: true,
-        message: 'Login successful',
-        data: {
-          user: userData,
-          accessToken,
-          refreshToken
+        const { error, value } = loginSchema.validate(req.body);
+        if (error) {
+            return res.status(400).json({ success: false, message: 'Validation error', details: error.details.map(detail => detail.message) });
         }
-      });
+
+        const { email, password } = value;
+        const user = await db('users').where({ email }).first();
+        if (!user) {
+            return res.status(401).json({ success: false, message: 'Invalid email or password' });
+        }
+
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        if (!isValidPassword) {
+            return res.status(401).json({ success: false, message: 'Invalid email or password' });
+        }
+
+        const accessToken = generateToken({ id: user.id, email: user.email, role: user.role });
+        const refreshToken = generateRefreshToken({ id: user.id });
+        
+        const REFRESH_TOKEN_LIFETIME_SECONDS = 7 * 24 * 60 * 60;
+        const expiresAt = new Date(Date.now() + REFRESH_TOKEN_LIFETIME_SECONDS * 1000);
+        
+        // 1. Cek apakah token untuk user ini sudah ada
+        const existingToken = await db('refresh_tokens').where({ user_id: user.id }).first();
+
+        if (existingToken) {
+            // 2. Jika ada, UPDATE token yang ada
+            await db('refresh_tokens')
+                .where({ user_id: user.id })
+                .update({
+                    token: refreshToken,
+                    expires_at: expiresAt,
+                    updated_at: new Date()
+                });
+        } else {
+            // 3. Jika tidak ada, INSERT token baru
+            await db('refresh_tokens').insert({
+                user_id: user.id,
+                token: refreshToken,
+                expires_at: expiresAt
+            });
+        }
+        
+        
+        if (user.status === 'inactive') {
+            await db('users').where({ id: user.id }).update({ status: 'active' });
+            user.status = 'active';
+        }
+
+        const userData = {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            status: user.status,
+            avatar_url: user.avatar_url
+        };
+
+        res.json({
+            success: true,
+            message: 'Login successful',
+            data: {
+                user: userData,
+                accessToken,
+                refreshToken
+            }
+        });
     } catch (error) {
-      next(error);
+        next(error);
     }
-  }
+}
 
    static async refreshToken(req, res, next) {
     try {
       // Data user sudah divalidasi dan dilampirkan oleh middleware
       const { id } = req.user;
 
-      const user = await db('users').select('id', 'email', 'role').where({ id }).first();
+      const user = await db('users').select('id', 'email', 'role', 'name').where({ id }).first();
       if (!user) {
         return res.status(404).json({ success: false, message: 'User not found' });
       }
@@ -154,6 +152,7 @@ class AuthController {
         success: true,
         message: 'Access token renewed successfully',
         data: {
+          user,
           accessToken: newAccessToken
         }
       });

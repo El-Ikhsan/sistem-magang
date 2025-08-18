@@ -5,10 +5,7 @@ const authenticate = async (req, res, next) => {
   let token;
 
   // 1. Coba ambil token dari header Authorization
-  const authHeader = req.header('Authorization');
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    token = authHeader.replace('Bearer ', '');
-  }
+  token = req.headers.authorization?.split(" ")[1];
 
   // 2. Jika tidak ada di header, coba ambil dari cookie
   if (!token && req.cookies && req.cookies.authToken) {
