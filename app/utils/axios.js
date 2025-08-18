@@ -1,39 +1,30 @@
 import axios from "axios";
 
 export const Axios = axios.create({
-    baseURL: "", // Remove base URL to avoid duplication
+    // 1. Gunakan URL API dari environment variable
+    baseURL: process.env.NEXT_PUBLIC_API_URL,
+
     headers: {
         "Content-Type": "application/json"
     },
-    // Untuk production deployment
-    withCredentials: false, // Set true jika menggunakan HTTP-only cookies dari backend
+
+    // 2. Wajib 'true' agar cookie (seperti refreshToken) bisa dikirim antar domain
+    withCredentials: true,
+
     timeout: 10000 // 10 detik timeout
 });
 
-// Request interceptor untuk debugging
-Axios.interceptors.request.use(
-    (config) => {
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
-
-// Response interceptor untuk error handling
+// Interceptor untuk menangani error secara terpusat
 Axios.interceptors.response.use(
+    // Jika respons sukses, langsung kembalikan
     (response) => {
         return response;
     },
+    // 3. Jika ada error, cukup teruskan error tersebut
     (error) => {
-        if (error.response?.status === 401) {
-            // Token expired atau tidak valid
-            if (typeof window !== 'undefined') {
-                // Clear cookie dan redirect ke login
-                document.cookie = "authToken=; path=/; max-age=0";
-                window.location.href = '/auth/login';
-            }
-        }
+        // Jangan tangani redirect di sini.
+        // Biarkan komponen atau context yang memanggil API yang memutuskan
+        // tindakan apa yang harus diambil (misalnya, logout dan redirect).
         return Promise.reject(error);
     }
 );

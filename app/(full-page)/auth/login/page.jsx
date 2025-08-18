@@ -1,8 +1,7 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useRouter } from "next/navigation";
-import React, { useContext, useRef, useState } from "react";
+import React, { useContext, useRef, useState, useEffect } from "react";
 import { Checkbox } from "primereact/checkbox";
 import { Button } from "primereact/button";
 import { Password } from "primereact/password";
@@ -10,107 +9,64 @@ import { LayoutContext } from "../../../../layout/context/layoutcontext";
 import { InputText } from "primereact/inputtext";
 import { classNames } from "primereact/utils";
 import { Toast } from 'primereact/toast';
+import { useAuth } from "../../../../layout/context/AuthContext"; // Pastikan path ini sesuai dengan struktur folder Anda
 
 const LoginPage = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [checked, setChecked] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [errorMsg, setErrorMsg] = useState("");
 
-    const router = useRouter();
     const toastRef = useRef(null);
     const { layoutConfig } = useContext(LayoutContext);
 
+    // 2. Gunakan context untuk mengakses fungsi login dan state
+    const { login, loading: authLoading, user } = useAuth();
+    const router = useRouter();
+
+    // Jika pengguna sudah login, redirect mereka
+    useEffect(() => {
+        if (user) {
+            // Arahkan ke dashboard yang sesuai jika pengguna sudah login
+            const path = user.role === 'admin' ? '/admin/dashboard' : '/user/dashboard';
+            router.push(path);
+        }
+    }, [user, router]);
+
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
-        setErrorMsg("");
 
         try {
-            const res = await fetch("/api/auth/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password })
+            await login(email, password); // 3. Panggil fungsi login dari context
+
+            // Redirect sudah ditangani di dalam fungsi login di AuthContext
+            // Toast success bisa ditambahkan di sini jika perlu
+            toastRef.current?.show({
+                severity: 'success',
+                summary: 'Berhasil',
+                detail: 'Anda berhasil masuk!'
             });
 
-            const result = await res.json();
-
-            // Handle both response formats
-            // Format 1: success: true (local backend)
-            // Format 2: status: '00' (remote backend)
-            const isSuccess = (res.ok && result.success) || (res.ok && result.status === '00');
-
-            if (isSuccess) {
-                toastRef.current?.show({
-                    severity: 'success',
-                    summary: 'Success',
-                    detail: result.message
-                });
-
-                // Ambil role dari response data (handle both formats)
-                let userRole;
-                if (result.data && result.data.user && result.data.user.role) {
-                    // Format 1: nested structure
-                    userRole = result.data.user.role;
-                } else if (result.role) {
-                    // Format 2: direct role field
-                    userRole = result.role;
-                }
-
-                // Redirect berdasarkan role
-                let redirectPath;
-                switch (userRole) {
-                    case "admin":
-                        redirectPath = "/admin/dashboard";
-                        break;
-                    case "user":
-                        redirectPath = "/user/dashboard";
-                        break;
-                    default:
-                        redirectPath = "/dashboard";
-                        break;
-                }
-
-                setTimeout(() => {
-                    router.push(redirectPath);
-                }, 1000);
-
-            } else {
-                toastRef.current?.show({
-                    severity: "error",
-                    summary: "Gagal",
-                    detail: result.message || "Email atau Password salah.",
-                    life: 3000
-                });
-            }
         } catch (error) {
+            // Tangkap error dari fungsi login dan tampilkan
             toastRef.current?.show({
                 severity: "error",
-                summary: "Error",
-                detail: "Terjadi kesalahan saat login",
+                summary: "Gagal",
+                detail: error.message || "Email atau Password salah.",
                 life: 3000
             });
-        } finally {
-            setLoading(false);
         }
-    };    const containerClassName = classNames("surface-ground flex align-items-center justify-content-center min-h-screen min-w-full overflow-hidden", { "p-input-filled": layoutConfig.inputStyle === "filled" });
+    };
+
+    const containerClassName = classNames("surface-ground flex align-items-center justify-content-center min-h-screen min-w-full overflow-hidden", { "p-input-filled": layoutConfig.inputStyle === "filled" });
 
     return (
         <div className={containerClassName}>
             <Toast ref={toastRef} />
             <div className="flex flex-column align-items-center justify-content-center">
-                <img src={`/layout/images/logo-${layoutConfig.colorScheme === "light" ? "dark" : "white"}.svg`} alt="Sakai logo" className="mb-5 w-6rem flex-shrink-0" />
-                <div
-                    style={{
-                        borderRadius: "56px",
-                        padding: "0.3rem",
-                        background: "linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%)"
-                    }}
-                >
+                <div style={{ borderRadius: "56px", padding: "0.3rem", background: "linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%)" }}>
                     <div className="w-full surface-card py-8 px-5 sm:px-8" style={{ borderRadius: "53px" }}>
                         <div className="text-center mb-5">
-                            <img src="/demo/images/login/avatar.png" alt="Image" height="50" className="mb-3" />
                             <div className="text-900 text-3xl font-medium mb-3">Selamat Datang</div>
                             <span className="text-600 font-medium">Masuk untuk melanjutkan</span>
                         </div>
@@ -118,41 +74,23 @@ const LoginPage = () => {
                         <form onSubmit={handleSubmit}>
                             <div className="p-fluid">
                                 <div className="mb-5">
-                                    <label htmlFor="email1" className="block text-900 text-xl font-medium mb-2">
-                                        Email
-                                    </label>
-                                    <InputText id="email1" type="text" placeholder="Alamat Email" className="w-full md:w-30rem" style={{ padding: "1rem" }} value={email} onChange={(e) => setEmail(e.target.value)} />
+                                    <label htmlFor="email1" className="block text-900 text-xl font-medium mb-2">Email</label>
+                                    <InputText id="email1" type="text" placeholder="Alamat Email" className="w-full" style={{ padding: "1rem" }} value={email} onChange={(e) => setEmail(e.target.value)} required/>
                                 </div>
-
                                 <div className="mb-5">
-                                    <label htmlFor="password" className="block text-900 font-medium text-xl mb-2">
-                                        Password
-                                    </label>
+                                    <label htmlFor="password" className="block text-900 font-medium text-xl mb-2">Password</label>
                                     <Password
                                         inputId="password"
                                         value={password}
-                                        onChange={(e) => {
-                                            setPassword(e.target.value);
-                                            setErrorMsg("");
-                                        }}
+                                        onChange={(e) => setPassword(e.target.value)}
                                         placeholder="Password"
                                         toggleMask
                                         className="w-full"
-                                        inputClassName="w-full p-3 md:w-30rem"
-                                    ></Password>
+                                        inputClassName="w-full p-3"
+                                        required
+                                    />
                                 </div>
-
-                                <div className="flex align-items-center justify-content-between mb-5 gap-5">
-                                    <div className="flex align-items-center">
-                                        <Checkbox inputId="rememberme1" checked={checked} onChange={(e) => setChecked(e.checked ?? false)} className="mr-2"></Checkbox>
-                                        <label htmlFor="rememberme1">Ingat saya</label>
-                                    </div>
-                                    <a className="font-medium no-underline ml-2 text-right cursor-pointer" style={{ color: "var(--primary-color)" }}>
-                                        Lupa password?
-                                    </a>
-                                </div>
-
-                                <Button type="submit" label="Sign In" className="w-full p-3 text-xl" loading={loading}></Button>
+                                <Button type="submit" label="Sign In" className="w-full p-3 text-xl" loading={authLoading}></Button>
                             </div>
                         </form>
                     </div>

@@ -1,23 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    // Opsi ini diperlukan jika ada paket server yang tidak bisa di-bundle
+    serverExternalPackages: ['jsonwebtoken', 'bcryptjs'],
 
-   serverExternalPackages: ['jsonwebtoken', 'bcryptjs'],
+    // Untuk production build yang dioptimalkan
+    output: 'standalone',
 
-  env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-    NEXT_PUBLIC_FRONTEND_URL: process.env.NEXT_PUBLIC_FRONTEND_URL,
-  },
-  // Untuk production build
-  output: 'standalone',
-  // Untuk mengatasi masalah cookie di production
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL}/:path*`,
-      },
-    ];
-  },
+    // Blok 'env' dan 'rewrites' tidak lagi diperlukan
 };
 
 module.exports = nextConfig;

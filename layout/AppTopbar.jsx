@@ -1,18 +1,22 @@
 /* eslint-disable @next/next/no-img-element */
+'use client';
 
-import Link from "next/link";
-import React, { forwardRef, useContext, useImperativeHandle, useRef, useState, useEffect, useCallback } from "react";
-import { LayoutContext } from "./context/layoutcontext";
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import React, { forwardRef, useContext, useImperativeHandle, useRef, useState, useEffect } from 'react';
+import { LayoutContext } from './context/layoutcontext';
+import { useAuth } from './context/AuthContext'; // Impor useAuth
 
 const AppTopbar = forwardRef((props, ref) => {
-    const { layoutConfig, layoutState, onMenuToggle } = useContext(LayoutContext);
+    const { onMenuToggle } = useContext(LayoutContext);
     const menubuttonRef = useRef(null);
     const topbarmenuRef = useRef(null);
     const topbarmenubuttonRef = useRef(null);
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-    const [username, setUsername] = useState(null);
-    const [role, setRole] = useState(null);
-    const [profilePhoto, setProfilePhoto] = useState(null);
+
+    // Gunakan state dan fungsi dari AuthContext
+    const { user, logout } = useAuth();
+    const router = useRouter();
 
     useImperativeHandle(ref, () => ({
         menubutton: menubuttonRef.current,
@@ -20,54 +24,18 @@ const AppTopbar = forwardRef((props, ref) => {
         topbarmenubutton: topbarmenubuttonRef.current
     }));
 
-    useEffect(() => {
-        const fetchProfile = async () => {
-            try {
-                const res = await fetch("/api/profile", {
-                    credentials: "include"
-                });
-
-                if (res.ok) {
-                    const result = await res.json();
-                    setUsername(result.data?.username || null);
-                    setRole(result.data?.role || null);
-                    setProfilePhoto(result.data?.profile_photo_url || null);
-                } else {
-                    setUsername(null);
-                    setRole(null);
-                    setProfilePhoto(null);
-                }
-            } catch (err) {
-                console.error("Failed to fetch profile:", err);
-                setUsername(null);
-                setRole(null);
-            }
-        };
-
-        fetchProfile();
-    }, []);
-
+    // --- PERBAIKAN UTAMA: FUNGSI LOGOUT ---
     const handleLogout = async () => {
-  try {
-    const response = await fetch("/api/auth/logout", {
-      method: "POST",
-      credentials: "include", 
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || "Logout failed");
-    }
-
-    localStorage.removeItem("token");
-    sessionStorage.removeItem("token");
-
-    window.location.href = "/auth/login";
-  } catch (error) {
-    console.error("Logout error:", error);
-    alert(error.message || "Gagal logout. Silakan coba lagi.");
-  }
-};
+        try {
+            await logout(); // Cukup panggil fungsi logout dari context
+            // Tidak perlu hapus cookie manual atau redirect, context & middleware sudah menangani
+            window.location.href = '/auth/login'; // Paksa reload penuh untuk membersihkan semua state
+        } catch (error) {
+            console.error("Logout error:", error);
+            // Jika gagal, tetap paksa redirect
+            window.location.href = '/auth/login';
+        }
+    };
 
     const toggleProfileDropdown = () => {
         setIsProfileDropdownOpen((prev) => !prev);
@@ -75,21 +43,34 @@ const AppTopbar = forwardRef((props, ref) => {
 
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (topbarmenuRef.current && !topbarmenuRef.current.contains(event.target) && topbarmenubuttonRef.current && !topbarmenubuttonRef.current.contains(event.target)) {
+            if (
+                topbarmenuRef.current && !topbarmenuRef.current.contains(event.target) &&
+                topbarmenubuttonRef.current && !topbarmenubuttonRef.current.contains(event.target)
+            ) {
                 setIsProfileDropdownOpen(false);
             }
         };
-
-        document.addEventListener("mousedown", handleClickOutside);
+        document.addEventListener('mousedown', handleClickOutside);
         return () => {
-            document.removeEventListener("mousedown", handleClickOutside);
+            document.removeEventListener('mousedown', handleClickOutside);
         };
     }, []);
+
+    // Jika user belum ada (masih loading atau belum login), tampilkan topbar minimal
+    if (!user) {
+        return (
+            <div className="layout-topbar">
+                <Link href="/" className="layout-topbar-logo">
+                    <span>Work-Order</span>
+                </Link>
+            </div>
+        );
+    }
 
     return (
         <div className="layout-topbar">
             <Link href="/" className="layout-topbar-logo">
-                <img src={`/layout/images/logo-${layoutConfig.colorScheme !== "light" ? "white" : "dark"}.svg`} width="47.22px" height={"35px"} alt="logo" />
+                <img src={`/layout/images/logo-dark.svg`} width="47.22px" height={'35px'} alt="logo" />
                 <span>Work-Order</span>
             </Link>
 
@@ -99,25 +80,21 @@ const AppTopbar = forwardRef((props, ref) => {
 
             <div className="layout-topbar-actions">
                 <span>
-                    {username} | {role}
+                    {user.name} | {user.role}
                 </span>
-                {/* <button type="button" className="p-link layout-topbar-button">
-                    <i className="pi pi-calendar"></i>
-                    <span>Calendar</span>
-                </button> */}
 
                 <div className="profile-dropdown-container">
                     <button ref={topbarmenubuttonRef} type="button" className="p-link layout-topbar-button profile-button" onClick={toggleProfileDropdown} aria-expanded={isProfileDropdownOpen}>
-                        {profilePhoto ? (
+                        {user.avatar_url ? (
                             <img
-                                src={profilePhoto}
+                                src={user.avatar_url}
                                 alt="Profile"
                                 className="profile-photo"
                                 style={{
-                                    width: "32px",
-                                    height: "32px",
-                                    borderRadius: "50%",
-                                    objectFit: "cover"
+                                    width: '32px',
+                                    height: '32px',
+                                    borderRadius: '50%',
+                                    objectFit: 'cover'
                                 }}
                             />
                         ) : (
@@ -132,10 +109,6 @@ const AppTopbar = forwardRef((props, ref) => {
                                 <i className="pi pi-user"></i>
                                 <span>My Profile</span>
                             </Link>
-                            {/* <Link href="/documentation" className="dropdown-item" onClick={toggleProfileDropdown}>
-                                <i className="pi pi-cog"></i>
-                                <span>Settings</span>
-                            </Link> */}
                             <div className="dropdown-divider"></div>
                             <div className="dropdown-item logout-item" onClick={handleLogout}>
                                 <i className="pi pi-sign-out"></i>

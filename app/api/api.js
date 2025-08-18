@@ -1,18 +1,17 @@
-// app/api/api.js
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
-
 export const API_ENDPOINTS = {
     // --- Auth Endpoints ---
-    LOGINUSERS: `${API_URL}/auth/login`,
-    LOGOUT: `${API_URL}/auth/logout`,
+    LOGINUSERS: '/auth/login',
+    LOGOUT: '/auth/logout',
+    REFRESH_TOKEN: '/auth/refresh-token',
+    REGISTERUSERS: '/auth/register',
 
     // --- General & Legacy Endpoints ---
-    GETALLWORKREQUEST: `${API_URL}/work-request`,
-    GETALLWORKORDER: `${API_URL}/work-order`,
-    GETALLSCHEDULEMAINTENANCE: `${API_URL}/schedule-maintenance-list`,
-    GETALLCONTINENT: `${API_URL}/continent`,
-    GETALLPARTSFORECASTER: `${API_URL}/parts-forecaster`,
+    GETALLWORKREQUEST: '/work-request',
+    GETALLWORKORDER: '/work-order',
+    GETALLSCHEDULEMAINTENANCE: '/schedule-maintenance-list',
+    GETALLCONTINENT: '/continent',
+    GETALLPARTSFORECASTER: '/parts-forecaster',
 
     // detail profile
-    GET_DETAIL_PROFILE: `${API_URL}/user-detail`,
+    GET_DETAIL_PROFILE: '/user-detail',
 };

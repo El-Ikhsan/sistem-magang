@@ -1,65 +1,37 @@
-import { Axios } from "../../../utils/axios";
-import { API_ENDPOINTS } from "../../api";
-import { NextResponse } from "next/server";
-import { isAxiosError } from "axios";
+import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { Axios } from "../../../utils/axios"; // Sesuaikan path
+import { API_ENDPOINTS } from "../../../api/api"; // Sesuaikan path
 
-export const POST = async (request) => {
+export async function DELETE(request) {
+    const cookieStore = await cookies();
+
     try {
-        // Ambil token dari cookie
-        const authToken = request.cookies.get("authToken")?.value;
+        // Ambil accessToken dari body request yang dikirim frontend
+        const { accessToken } = await request.json();
+        console.log(accessToken);
 
-        if (authToken) {
-            // Kirim logout request ke backend dengan token
-            try {
-                await Axios.delete(API_ENDPOINTS.LOGOUT, {
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`
-                    }
-                });
-            } catch (backendError) {
-                // Jika backend error, tetap lanjutkan untuk hapus cookie
-                console.log("Backend logout error (continuing):", backendError);
-            }
+        if (accessToken) {
+            // Panggil backend utama menggunakan accessToken di header Authorization
+            await Axios.delete(API_ENDPOINTS.LOGOUT, { // Body bisa kosong jika tidak dibutuhkan
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
         }
-
-        const response = NextResponse.json(
-            {
-                success: true,
-                message: "Logout successful"
-            },
-            { status: 200 }
-        );
-
-        // Clear cookie dengan setting yang konsisten
-        response.cookies.set("authToken", "", {
-            httpOnly: false,
-            expires: new Date(0),
-            path: "/",
-            secure: false,
-            sameSite: "lax"
-        });
-
-        return response;
     } catch (error) {
-        console.error("[API LOGOUT]", error);
-
-        // Tetap clear cookie meski ada error
-        const response = NextResponse.json(
-            {
-                success: false,
-                message: "Logout failed but cookie cleared"
-            },
-            { status: 500 }
-        );
-
-        response.cookies.set("authToken", "", {
-            httpOnly: false,
-            expires: new Date(0),
-            path: "/",
-            secure: false,
-            sameSite: "lax"
-        });
-
-        return response;
+        // Abaikan error dari backend utama, yang terpenting adalah menghapus cookie
+        console.error("Backend logout failed, but clearing cookie anyway:", error.message);
     }
-};
+
+    // Langkah paling krusial: Hapus cookie refreshToken dari browser
+    cookieStore.set('refreshToken', '', {
+        httpOnly: true,
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 0 // Atur maxAge ke 0 untuk menghapus cookie
+    });
+
+    return NextResponse.json({ success: true, message: "Logged out successfully" });
+}

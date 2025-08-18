@@ -1,55 +1,47 @@
-
-import { Axios } from "../../../utils/axios";
-import { API_ENDPOINTS } from "../../api";
+import { Axios } from "../../../utils/axios"; // Sesuaikan path
+import { API_ENDPOINTS } from "../../../api/api"; // Sesuaikan path
 import { NextResponse } from "next/server";
 import { isAxiosError } from "axios";
 
-export const POST = async (request) => {
+export async function POST(request) {
     try {
         const { email, password } = await request.json();
+        // Panggil backend utama untuk login
         const response = await Axios.post(API_ENDPOINTS.LOGINUSERS, { email, password });
 
-        const data = response.data;
-        const nextResponse = NextResponse.json(data);
+        const responseData = response.data;
 
-        // Handle different response formats for token storage
-        let tokenToStore = null;
+        // Asumsi backend mengembalikan { success: true, data: { accessToken, refreshToken, user } }
+        if (responseData.success && responseData.data) {
+            const { accessToken, refreshToken, user } = responseData.data;
 
-        // Format 1: Local backend with nested structure
-        if (data.success && data.data && data.data.accessToken) {
-            tokenToStore = data.data.accessToken;
-        }
-        // Format 2: Remote backend with direct token field
-        else if (data.status === '00' && data.token) {
-            tokenToStore = data.token;
-        }
+            // Buat respons JSON yang akan dikirim ke client
+            // HANYA kirim accessToken dan data user
+            const nextResponse = NextResponse.json({
+                success: true,
+                message: "Login successful",
+                data: { accessToken, user }
+            });
 
-        if (tokenToStore) {
-            // Cookie settings yang lebih robust untuk production
-            const cookieOptions = {
-                name: "authToken",
-                value: tokenToStore,
-                httpOnly: false, // Perlu false agar bisa diakses client-side
+            // Atur refreshToken di dalam cookie yang aman
+            nextResponse.cookies.set({
+                name: "refreshToken",
+                value: refreshToken,
+                httpOnly: true, // PENTING: Mencegah akses dari JavaScript
                 path: "/",
-                maxAge: 60 * 60 * 24, // 24 jam
-                secure: false, // Set false untuk HTTP, true untuk HTTPS
-                sameSite: "lax"
-            };
+                maxAge: 60 * 60 * 24 * 7, // 7 hari
+                secure: process.env.NODE_ENV === "production", // Wajib true untuk HTTPS
+                sameSite: "strict" // Paling aman
+            });
 
-            // Untuk production dengan HTTPS, aktifkan secure
-            if (process.env.NODE_ENV === "production" && request.url.startsWith('https')) {
-                cookieOptions.secure = true;
-            }
-
-            nextResponse.cookies.set(cookieOptions);
+            return nextResponse;
         }
 
-        return nextResponse;
+        return NextResponse.json(responseData);
     } catch (err) {
         if (isAxiosError(err) && err.response) {
             return NextResponse.json(err.response.data, { status: err.response.status });
         }
-
         return NextResponse.json({
             success: false,
             message: "Gagal terhubung ke server backend."
