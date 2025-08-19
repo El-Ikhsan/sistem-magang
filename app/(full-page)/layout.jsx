@@ -1,6 +1,6 @@
+export const dynamic = 'force-dynamic';
 import AppConfig from '../../layout/AppConfig';
 import React from 'react';
-
 
 export const metadata = {
     title: 'PrimeReact Sakai',

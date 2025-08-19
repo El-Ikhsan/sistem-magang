@@ -74,7 +74,9 @@ export const AuthProvider = ({ children }) => {
 
             if (!response.ok) {
                 console.log('No valid session found, redirecting to login');
-                return
+                setAccessToken(null);
+                setUser(null);
+                router.push('/auth/login');
             }
 
             setAccessToken(result.data.accessToken);

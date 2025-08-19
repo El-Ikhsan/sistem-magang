@@ -1,4 +1,4 @@
-// 1. Impor semua CSS/SCSS global, TERMASUK theme.css
+export const dynamic = 'force-dynamic';
 import 'primereact/resources/themes/lara-light-indigo/theme.css'; // <-- PINDAHKAN KE SINI
 import 'primereact/resources/primereact.css';
 import 'primeflex/primeflex.css';
