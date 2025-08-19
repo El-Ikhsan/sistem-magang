@@ -43,6 +43,23 @@ const LogbookTable = ({
         return <Tag value={row.kehadiran} severity={map[row.kehadiran] || 'secondary'} />;
     };
 
+    const statusBody = (row) => {
+        const map = { pending: 'warning', validated: 'success', rejected: 'danger' };
+        return <Tag value={row.status} severity={map[row.status] || 'secondary'} className="text-sm" />;
+    };
+
+    const validatedByBody = (row) => {
+        // row.validated_by may contain user object or id depending on API
+        const v = row.validated_by_name || row.validated_by || '-';
+        return <span className="text-sm">{v}</span>;
+    };
+
+    const adminFeedbackBody = (row) => (
+        <div className="text-sm text-ellipsis" style={{ maxWidth: 240 }} title={row.admin_feedback || ''}>
+            {row.admin_feedback || '-'}
+        </div>
+    );
+
     const tanggalBody = row => new Date(row.tanggal).toLocaleDateString('id-ID');
     const jamBody = row => `${row.jam_mulai || '-'} - ${row.jam_selesai || '-'}`;
 
@@ -78,7 +95,7 @@ const LogbookTable = ({
                 loading={loading}
                 emptyMessage="No logbook entries."
                 filters={filters}
-                globalFilterFields={["kegiatan", "deskripsi", "kehadiran"]}
+                globalFilterFields={["kegiatan", "deskripsi", "kehadiran", "status", "admin_feedback", "validated_by"]}
                 className="border-round-lg"
                 rowClassName={() => "hover:bg-gray-50 transition-colors cursor-pointer"}
                 header={header}
@@ -90,6 +107,9 @@ const LogbookTable = ({
                 <Column field="kegiatan" header="Activity" style={{ minWidth: '300px' }} sortable />
                 <Column field="deskripsi" header="Description" style={{ minWidth: '200px' }} />
                 <Column header="Time" body={jamBody} style={{ width: '140px' }} />
+                <Column field="status" header="Status" body={statusBody} style={{ width: '120px' }} sortable />
+                <Column field="admin_feedback" header="Feedback Admin" body={adminFeedbackBody} style={{ minWidth: '200px' }} />
+                <Column field="validated_by" header="Validated By" body={validatedByBody} style={{ width: '160px' }} />
                 <Column header="Actions" body={actionBody} style={{ minWidth: '8rem' }} />
             </DataTable>
         </div>
