@@ -10,6 +10,8 @@ export const API_ENDPOINTS = {
     USERS: '/admin/user',
     USER_BY_ID: (id) => `/admin/user/${id}`,
     DELETE_USERS_MANY: '/admin/user/delete-many',
+    // --- Users Logbook ---
+    USERS_LOGBOOK: '/users/logbook',
 
     // --- Legacy Endpoints (keep for compatibility) ---
     LOGINUSERS: '/auth/login',

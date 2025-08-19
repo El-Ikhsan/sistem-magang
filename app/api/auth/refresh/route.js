@@ -50,15 +50,15 @@ export async function POST(request) {
         return NextResponse.json(responseData, { status: 401 });
     } catch (err) {
         console.error("[API AUTH REFRESH ERROR]", err.message);
-        
+
         if (isAxiosError(err) && err.response) {
             console.error("Backend response:", err.response.data);
             // If refresh fails, clear cookies
             const response = NextResponse.json(
-                { 
-                    success: false, 
-                    message: err.response.data.message || "Token refresh failed" 
-                }, 
+                {
+                    success: false,
+                    message: err.response.data.message || "Token refresh failed"
+                },
                 { status: err.response.status }
             );
             response.cookies.delete("authToken");

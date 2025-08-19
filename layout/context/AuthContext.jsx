@@ -66,13 +66,13 @@ export const AuthProvider = ({ children }) => {
                 method: 'POST',
                 credentials: 'include' // Pastikan cookies dikirim
             });
-            
+
             if (!response.ok) {
                 console.log('No valid session found');
                 setUser(null);
                 return;
             }
-            
+
             const result = await response.json();
             if (result.success && result.data) {
                 setUser(result.data.user);
