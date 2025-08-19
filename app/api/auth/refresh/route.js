@@ -15,12 +15,13 @@ export async function POST(request) {
             );
         }
 
-        // Call backend refresh token endpoint
+        // Call backend refresh token endpoint with proper headers
         const response = await Axios.post(API_ENDPOINTS.REFRESH_TOKEN, {}, {
             headers: {
-                Authorization: `Bearer ${refreshToken}`,
+                'Authorization': `Bearer ${refreshToken}`,
                 'Content-Type': 'application/json'
-            }
+            },
+            withCredentials: true
         });
 
         const responseData = response.data;
@@ -48,15 +49,23 @@ export async function POST(request) {
 
         return NextResponse.json(responseData, { status: 401 });
     } catch (err) {
+        console.error("[API AUTH REFRESH ERROR]", err.message);
+        
         if (isAxiosError(err) && err.response) {
+            console.error("Backend response:", err.response.data);
             // If refresh fails, clear cookies
-            const response = NextResponse.json(err.response.data, { status: err.response.status });
+            const response = NextResponse.json(
+                { 
+                    success: false, 
+                    message: err.response.data.message || "Token refresh failed" 
+                }, 
+                { status: err.response.status }
+            );
             response.cookies.delete("authToken");
             response.cookies.delete("refreshToken");
             return response;
         }
 
-        console.error("[API AUTH REFRESH]", err);
         const response = NextResponse.json({
             success: false,
             message: "Gagal memperbarui token."

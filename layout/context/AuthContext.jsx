@@ -64,16 +64,21 @@ export const AuthProvider = ({ children }) => {
             // Panggil endpoint refresh untuk mendapatkan data user jika ada refreshToken valid
             const response = await fetch('/api/auth/refresh', {
                 method: 'POST',
+                credentials: 'include' // Pastikan cookies dikirim
             });
-            const result = await response.json();
-
+            
             if (!response.ok) {
                 console.log('No valid session found');
                 setUser(null);
                 return;
             }
-
-            setUser(result.data.user);
+            
+            const result = await response.json();
+            if (result.success && result.data) {
+                setUser(result.data.user);
+            } else {
+                setUser(null);
+            }
         } catch (error) {
             // Jika gagal (misal, refresh token tidak ada atau tidak valid), pastikan state kosong
             console.error('Session check failed:', error);
