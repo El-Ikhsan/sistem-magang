@@ -98,8 +98,22 @@ class LogbookController {
         query = query.whereRaw('YEAR(tanggal) = ?', [year]);
       }
 
-      const totalResult = await query.clone().count('* as count').first();
-      const total = totalResult.count;
+      // Build a separate count query that doesn't include SELECT * or ORDER BY
+      const countQuery = db('logbook').where({ user_id: req.user.id });
+
+      if (status) {
+        countQuery.where('status', status);
+      }
+
+      if (month && year) {
+        countQuery.whereRaw('MONTH(tanggal) = ? AND YEAR(tanggal) = ?', [month, year]);
+      } else if (year) {
+        countQuery.whereRaw('YEAR(tanggal) = ?', [year]);
+      }
+
+      const totalResult = await countQuery.count('* as count').first();
+      const total = totalResult ? parseInt(totalResult.count, 10) : 0;
+
       const logbooks = await query.limit(limit).offset(offset);
 
       res.json({
