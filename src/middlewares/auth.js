@@ -1,5 +1,6 @@
 import { db } from '../../config/database.js'; 
 import { verifyToken, verifyRefreshToken } from '../../config/jwt.js';
+import jwt from 'jsonwebtoken';
 
 const authenticate = async (req, res, next) => {
   let token;
@@ -50,13 +51,19 @@ const authenticate = async (req, res, next) => {
 };
 
 const refreshTokenMiddleware = async (req, res, next) => {
-
   let token;
   
-  // 1. Coba ambil token dari header x-refresh-token
-  token = req.headers['x-refresh-token'];
+  // 1. Coba ambil token dari header Authorization
+  if (req.headers.authorization?.startsWith('Bearer ')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
   
-  // 2. Jika tidak ada di header, coba ambil dari cookie
+  // 2. Jika tidak ada di header Authorization, coba ambil dari header x-refresh-token
+  if (!token) {
+    token = req.headers['x-refresh-token'];
+  }
+  
+  // 3. Jika tidak ada di header, coba ambil dari cookie
   if (!token && req.cookies && req.cookies.refreshToken) {
     token = req.cookies.refreshToken;
   }
@@ -67,7 +74,7 @@ const refreshTokenMiddleware = async (req, res, next) => {
 
   try {
     // Langkah 1: Verifikasi apakah token valid secara kriptografis (signature & expiration)
-    const decoded = verifyRefreshToken(token, process.env.JWT_REFRESH_SECRET);
+    const decoded = verifyRefreshToken(token);
 
     // Langkah 2: Cek apakah token ada di database (paling penting!)
     const storedToken = await db('refresh_tokens').where({ token: token }).first();
@@ -78,15 +85,12 @@ const refreshTokenMiddleware = async (req, res, next) => {
     }
 
     // Jika semua aman, lampirkan data user ke request
-    req.user = { id: decoded.id, email: decoded.email };
+    req.user = { id: decoded.id };
     next();
 
   } catch (error) {
-    if (error instanceof jwt.TokenExpiredError || error instanceof jwt.JsonWebTokenError) {
-      return res.status(403).json({ success: false, message: 'Refresh token has expired or is invalid.' });
-    }
-    // Untuk error lainnya
-    next(error);
+    console.error('Refresh token verification error:', error);
+    return res.status(403).json({ success: false, message: 'Refresh token has expired or is invalid.' });
   }
 };
 
