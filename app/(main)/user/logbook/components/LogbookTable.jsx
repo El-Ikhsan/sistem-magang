@@ -95,7 +95,7 @@ const LogbookTable = ({
                 loading={loading}
                 emptyMessage="No logbook entries."
                 filters={filters}
-                globalFilterFields={["kegiatan", "deskripsi", "kehadiran", "status", "admin_feedback", "validated_by"]}
+                globalFilterFields={["kegiatan", "deskripsi", "kehadiran", "status", "admin_feedback", "validated_by", "validated_by_name"]}
                 className="border-round-lg"
                 rowClassName={() => "hover:bg-gray-50 transition-colors cursor-pointer"}
                 header={header}
@@ -109,7 +109,7 @@ const LogbookTable = ({
                 <Column header="Time" body={jamBody} style={{ width: '140px' }} />
                 <Column field="status" header="Status" body={statusBody} style={{ width: '120px' }} sortable />
                 <Column field="admin_feedback" header="Feedback Admin" body={adminFeedbackBody} style={{ minWidth: '200px' }} />
-                <Column field="validated_by" header="Validated By" body={validatedByBody} style={{ width: '160px' }} />
+                <Column field="validated_by_name" header="Validated By" body={validatedByBody} style={{ width: '160px' }} />
                 <Column header="Actions" body={actionBody} style={{ minWidth: '8rem' }} />
             </DataTable>
         </div>
