@@ -11,7 +11,7 @@ export const GET = async (request) => {
             return NextResponse.json({ success: false, message: "Unauthorized", data: null }, { status: 401 });
         }
 
-        const response = await Axios.get(API_ENDPOINTS.GET_DETAIL_PROFILE, {
+        const response = await Axios.get(API_ENDPOINTS.PROFILE, {
             headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -42,7 +42,7 @@ export const PATCH = async (request) => {
         const formData = await request.formData();
 
         // Kirim ke API backend
-        const response = await Axios.patch(API_ENDPOINTS.GET_DETAIL_PROFILE, formData, {
+        const response = await Axios.patch(API_ENDPOINTS.PROFILE, formData, {
             headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "multipart/form-data"

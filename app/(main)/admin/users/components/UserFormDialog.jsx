@@ -4,49 +4,47 @@ import { Dialog } from "primereact/dialog";
 import { InputText } from "primereact/inputtext";
 import { Password } from "primereact/password";
 import { Dropdown } from "primereact/dropdown";
-import { Checkbox } from "primereact/checkbox";
 import { Button } from "primereact/button";
 import { classNames } from "primereact/utils";
 import { useState, useEffect } from "react";
 
 const UserFormDialog = ({ visible, onHide, user, fetchUsers, showToast }) => {
     const [form, setForm] = useState({
-        username: "",
+        name: "",
         email: "",
         password: "",
-        full_name: "",
-        role: "employee",
-        is_active: true
+        role: "user",
+        status: "active"
     });
     const [loading, setLoading] = useState(false);
     const [submitted, setSubmitted] = useState(false);
 
     const roleOptions = [
         { label: "Admin", value: "admin" },
-        { label: "Manager", value: "manager" },
-        { label: "Technician", value: "technician" },
-        { label: "Logistics", value: "logistics" },
-        { label: "Employee", value: "employee" }
+        { label: "User", value: "user" }
+    ];
+
+    const statusOptions = [
+        { label: "Active", value: "active" },
+        { label: "Inactive", value: "inactive" }
     ];
 
     useEffect(() => {
         if (user) {
             setForm({
-                username: user.username || "",
+                name: user.name || "",
                 email: user.email || "",
                 password: "", // Always empty for edit mode
-                full_name: user.full_name || "",
-                role: user.role || "employee",
-                is_active: user.is_active === 1 || user.is_active === true
+                role: user.role || "user",
+                status: user.status || "active"
             });
         } else {
             setForm({
-                username: "",
+                name: "",
                 email: "",
                 password: "",
-                full_name: "",
-                role: "employee",
-                is_active: true
+                role: "user",
+                status: "active"
             });
         }
         setSubmitted(false);
@@ -59,9 +57,8 @@ const UserFormDialog = ({ visible, onHide, user, fetchUsers, showToast }) => {
     const validateForm = () => {
         const errors = {};
 
-        if (!form.username.trim()) errors.username = "Username is required";
+        if (!form.name.trim()) errors.name = "Name is required";
         if (!form.email.trim()) errors.email = "Email is required";
-        if (!form.full_name.trim()) errors.full_name = "Full name is required";
         if (!user && !form.password.trim()) errors.password = "Password is required";
         if (form.email && !/\S+@\S+\.\S+/.test(form.email)) errors.email = "Email is invalid";
 
@@ -144,21 +141,21 @@ const UserFormDialog = ({ visible, onHide, user, fetchUsers, showToast }) => {
             footer={dialogFooter}
         >
             <div className="field grid mb-4">
-                <label htmlFor="username" className="col-12 mb-2 font-medium">
-                    Username <span className="text-red-500">*</span>
+                <label htmlFor="name" className="col-12 mb-2 font-medium">
+                    Name <span className="text-red-500">*</span>
                 </label>
                 <div className="col-12">
                     <InputText
-                        id="username"
-                        value={form.username}
-                        onChange={(e) => handleChange("username", e.target.value)}
-                        placeholder="Enter username"
+                        id="name"
+                        value={form.name}
+                        onChange={(e) => handleChange("name", e.target.value)}
+                        placeholder="Enter full name"
                         className={classNames({
-                            "p-invalid": submitted && !form.username.trim()
+                            "p-invalid": submitted && !form.name.trim()
                         })}
                     />
-                    {submitted && !form.username.trim() &&
-                        <small className="p-error">Username is required</small>
+                    {submitted && !form.name.trim() &&
+                        <small className="p-error">Name is required</small>
                     }
                 </div>
             </div>
@@ -211,26 +208,6 @@ const UserFormDialog = ({ visible, onHide, user, fetchUsers, showToast }) => {
             </div>
 
             <div className="field grid mb-4">
-                <label htmlFor="full_name" className="col-12 mb-2 font-medium">
-                    Full Name <span className="text-red-500">*</span>
-                </label>
-                <div className="col-12">
-                    <InputText
-                        id="full_name"
-                        value={form.full_name}
-                        onChange={(e) => handleChange("full_name", e.target.value)}
-                        placeholder="Enter full name"
-                        className={classNames({
-                            "p-invalid": submitted && !form.full_name.trim()
-                        })}
-                    />
-                    {submitted && !form.full_name.trim() &&
-                        <small className="p-error">Full name is required</small>
-                    }
-                </div>
-            </div>
-
-            <div className="field grid mb-4">
                 <label htmlFor="role" className="col-12 mb-2 font-medium">
                     Role <span className="text-red-500">*</span>
                 </label>
@@ -246,13 +223,17 @@ const UserFormDialog = ({ visible, onHide, user, fetchUsers, showToast }) => {
             </div>
 
             <div className="field grid mb-6">
+                <label htmlFor="status" className="col-12 mb-2 font-medium">
+                    Status <span className="text-red-500">*</span>
+                </label>
                 <div className="col-12">
-                    <Checkbox
-                        inputId="is_active"
-                        checked={form.is_active}
-                        onChange={(e) => handleChange("is_active", e.checked)}
+                    <Dropdown
+                        id="status"
+                        value={form.status}
+                        options={statusOptions}
+                        onChange={(e) => handleChange("status", e.value)}
+                        placeholder="Select status"
                     />
-                    <label htmlFor="is_active" className="ml-2">Active User</label>
                 </div>
             </div>
         </Dialog>

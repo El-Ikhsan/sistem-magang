@@ -46,11 +46,10 @@ const UserPage = () => {
     });
 
     const [columnOptions] = useState([
-        { field: 'username', header: 'Username', visible: true },
-        { field: 'full_name', header: 'Full Name', visible: true },
+        { field: 'name', header: 'Name', visible: true },
         { field: 'email', header: 'Email', visible: true },
         { field: 'role', header: 'Role', visible: true },
-        { field: 'is_active', header: 'Status', visible: true },
+        { field: 'status', header: 'Status', visible: true },
         { field: 'created_at', header: 'Created Date', visible: true },
         { field: 'updated_at', header: 'Updated Date', visible: true }
     ]);
@@ -89,8 +88,8 @@ const UserPage = () => {
         });
     };
 
-    const formatStatus = (isActive) => {
-        return isActive ? "Active" : "Inactive";
+    const formatStatus = (status) => {
+        return status === "active" ? "Active" : "Inactive";
     };
 
     // --- Export to Excel ---
@@ -117,7 +116,7 @@ const UserPage = () => {
                 .map(col => {
                     if (col.field === 'created_at' || col.field === 'updated_at') {
                         return formatDate(user[col.field]);
-                    } else if (col.field === 'is_active') {
+                    } else if (col.field === 'status') {
                         return formatStatus(user[col.field]);
                     } else {
                         return user[col.field] || '';
@@ -170,7 +169,7 @@ const UserPage = () => {
             return visibleColumns.map(col => {
                 if (col.field === 'created_at' || col.field === 'updated_at') {
                     return formatDate(user[col.field]);
-                } else if (col.field === 'is_active') {
+                } else if (col.field === 'status') {
                     return formatStatus(user[col.field]);
                 } else {
                     return user[col.field] || '';
@@ -223,26 +222,26 @@ const UserPage = () => {
 
                 const rowData = {};
                 row.eachCell((cell, colNumber) => {
-                    const headers = ['username', 'email', 'password', 'full_name', 'role', 'is_active'];
+                    const headers = ['name', 'email', 'password', 'role', 'status'];
                     if (headers[colNumber - 1]) {
                         let value = cell.value;
 
-                        // Handle is_active conversion
-                        if (headers[colNumber - 1] === 'is_active') {
-                            value = [true, "true", 1, "1", "active"].includes(String(value).toLowerCase());
+                        // Handle status conversion
+                        if (headers[colNumber - 1] === 'status') {
+                            value = ['active', 'true', '1', 1, true].includes(String(value).toLowerCase()) ? 'active' : 'inactive';
                         }
 
                         // Handle role validation
                         if (headers[colNumber - 1] === 'role') {
-                            const validRoles = ['admin', 'employee', 'technician', 'manager', 'logistics'];
-                            value = validRoles.includes(value) ? value : 'employee';
+                            const validRoles = ['admin', 'user'];
+                            value = validRoles.includes(value) ? value : 'user';
                         }
 
                         rowData[headers[colNumber - 1]] = value;
                     }
                 });
 
-                if (rowData.username && rowData.email) {
+                if (rowData.name && rowData.email) {
                     data.push(rowData);
                 }
             });

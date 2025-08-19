@@ -50,10 +50,7 @@ const UserTable = ({
     const roleBodyTemplate = (rowData) => {
         const roleColors = {
             admin: "danger",
-            manager: "warning",
-            technician: "info",
-            logistics: "success",
-            employee: "secondary"
+            user: "success"
         };
 
         return (
@@ -67,8 +64,8 @@ const UserTable = ({
 
     const statusBodyTemplate = (rowData) => (
         <Tag
-            value={rowData.is_active ? "Active" : "Inactive"}
-            severity={rowData.is_active ? "success" : "danger"}
+            value={rowData.status === "active" ? "Active" : "Inactive"}
+            severity={rowData.status === "active" ? "success" : "danger"}
             className="text-sm"
         />
     );
@@ -138,7 +135,7 @@ const UserTable = ({
                 loading={loading}
                 emptyMessage="No users found."
                 filters={filters}
-                globalFilterFields={["username", "full_name", "email", "role"]}
+                globalFilterFields={["name", "email", "role"]}
                 className="border-round-lg"
                 rowClassName={() => "hover:bg-gray-50 transition-colors cursor-pointer"}
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
@@ -148,11 +145,10 @@ const UserTable = ({
                 selectionMode="multiple"
             >
                 <Column selectionMode="multiple" headerStyle={{ width: "3rem" }} />
-                <Column field="username" header="Username" style={{ width: "150px" }} sortable />
-                <Column field="full_name" header="Full Name" style={{ width: "200px" }} sortable />
-                <Column field="email" header="Email" style={{ width: "200px" }} sortable />
+                <Column field="name" header="Name" style={{ width: "200px" }} sortable />
+                <Column field="email" header="Email" style={{ width: "250px" }} sortable />
                 <Column field="role" header="Role" body={roleBodyTemplate} style={{ width: "120px" }} sortable />
-                <Column field="is_active" header="Status" body={statusBodyTemplate} style={{ width: "100px" }} sortable />
+                <Column field="status" header="Status" body={statusBodyTemplate} style={{ width: "100px" }} sortable />
                 <Column field="created_at" header="Created" body={createdAtBodyTemplate} style={{ width: "120px" }} sortable />
                 <Column header="Actions" body={actionBodyTemplate} style={{ minWidth: "8rem" }} />
             </DataTable>

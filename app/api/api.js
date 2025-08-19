@@ -1,17 +1,23 @@
 export const API_ENDPOINTS = {
     // --- Auth Endpoints ---
-    LOGINUSERS: '/auth/login',
+    LOGIN: '/auth/login',
     LOGOUT: '/auth/logout',
     REFRESH_TOKEN: '/auth/refresh-token',
-    REGISTERUSERS: '/auth/register',
+    REGISTER: '/auth/register',
+    PROFILE: '/auth/me',
 
-    // --- General & Legacy Endpoints ---
+    // --- Admin User Management ---
+    USERS: '/admin/user',
+    USER_BY_ID: (id) => `/admin/user/${id}`,
+    DELETE_USERS_MANY: '/admin/user/delete-many',
+
+    // --- Legacy Endpoints (keep for compatibility) ---
+    LOGINUSERS: '/auth/login',
+    REGISTERUSERS: '/auth/register',
+    GET_DETAIL_PROFILE: '/auth/me',
     GETALLWORKREQUEST: '/work-request',
     GETALLWORKORDER: '/work-order',
     GETALLSCHEDULEMAINTENANCE: '/schedule-maintenance-list',
     GETALLCONTINENT: '/continent',
     GETALLPARTSFORECASTER: '/parts-forecaster',
-
-    // detail profile
-    GET_DETAIL_PROFILE: '/user-detail',
 };
