@@ -61,7 +61,7 @@ const AppTopbar = forwardRef((props, ref) => {
         return (
             <div className="layout-topbar">
                 <Link href="/" className="layout-topbar-logo">
-                    <span>Work-Order</span>
+                    <span>Sistem Magang</span>
                 </Link>
             </div>
         );
