@@ -136,7 +136,7 @@ class AuthController {
       // Data user sudah divalidasi dan dilampirkan oleh middleware
       const { id } = req.user;
 
-      const user = await db('users').select('id', 'email', 'role', 'name').where({ id }).first();
+      const user = await db('users').select('id', 'name', 'email', 'role', 'status', 'avatar_url').where({ id }).first();
       if (!user) {
         return res.status(404).json({ success: false, message: 'User not found' });
       }
