@@ -1,19 +1,15 @@
 import { db } from '../../config/database.js'; 
 import { verifyToken, verifyRefreshToken } from '../../config/jwt.js';
-import jwt from 'jsonwebtoken';
 
 const authenticate = async (req, res, next) => {
   let token;
 
-  // 1. Coba ambil token dari header Authorization
   token = req.headers.authorization?.split(" ")[1];
 
-  // 2. Jika tidak ada di header, coba ambil dari cookie
   if (!token && req.cookies && req.cookies.authToken) {
     token = req.cookies.authToken;
   }
 
-  // 3. Jika token tidak ditemukan sama sekali
   if (!token) {
     return res.status(401).json({
       success: false,
@@ -22,10 +18,8 @@ const authenticate = async (req, res, next) => {
   }
 
   try {
-    // 4. Verifikasi token
-    const decoded = verifyToken(token);
 
-    // 5. Cari pengguna yang aktif di database
+    const decoded = verifyToken(token);
     const user = await db('users')
       .select('id', 'name', 'email', 'role', 'status')
       .where({ id: decoded.id, status: 'active' })
@@ -38,11 +32,9 @@ const authenticate = async (req, res, next) => {
       });
     }
 
-    // 6. Lampirkan pengguna ke request dan lanjutkan
     req.user = user;
     next();
   } catch (error) {
-    // Tangani error jika token tidak valid atau kadaluarsa
     return res.status(401).json({
       success: false,
       message: 'Invalid token'
@@ -51,19 +43,11 @@ const authenticate = async (req, res, next) => {
 };
 
 const refreshTokenMiddleware = async (req, res, next) => {
+
   let token;
-  
-  // 1. Coba ambil token dari header Authorization
-  if (req.headers.authorization?.startsWith('Bearer ')) {
-    token = req.headers.authorization.split(' ')[1];
-  }
-  
-  // 2. Jika tidak ada di header Authorization, coba ambil dari header x-refresh-token
-  if (!token) {
-    token = req.headers['x-refresh-token'];
-  }
-  
-  // 3. Jika tidak ada di header, coba ambil dari cookie
+
+  token = req.headers['x-refresh-token'];
+
   if (!token && req.cookies && req.cookies.refreshToken) {
     token = req.cookies.refreshToken;
   }
@@ -73,7 +57,6 @@ const refreshTokenMiddleware = async (req, res, next) => {
   }
 
   try {
-    // Langkah 1: Verifikasi apakah token valid secara kriptografis (signature & expiration)
     const decoded = verifyRefreshToken(token);
 
     // Langkah 2: Cek apakah token ada di database (paling penting!)
