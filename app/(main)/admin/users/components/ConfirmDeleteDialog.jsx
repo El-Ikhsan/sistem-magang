@@ -101,8 +101,8 @@ const ConfirmDeleteDialog = ({
                             `Anda akan menghapus ${selectedUsers.length} user yang dipilih.`
                         ) : (
                             <>
-                                Anda akan menghapus user <strong>{user?.username ?? "yang dipilih"}</strong>
-                                {user?.full_name && ` (${user.full_name})`}.
+                                Anda akan menghapus user <strong>{user?.name ?? "yang dipilih"}</strong>
+                                {user?.email && ` (${user.email})`}.
                             </>
                         )}
                         <br />
