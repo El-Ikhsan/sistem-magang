@@ -16,11 +16,13 @@ import adminPendaftaranRoutes from './src/routes/admin/pendaftaran.js';
 import adminLogbookRoutes from './src/routes/admin/logbook.js';
 import adminSertifikatRoutes from './src/routes/admin/sertifikat.js';
 import adminUserRoutes from './src/routes/admin/user.js';
+import adminInstitutionsRoutes from './src/routes/admin/institutions.js';
 
 // users
 import userPendaftaranRoutes from './src/routes/users/pendaftaran.js';
 import userLogbookRoutes from './src/routes/users/logbook.js';
 import userSertifikatRoutes from './src/routes/users/sertifikat.js';
+import userInstitutionsRoutes from './src/routes/users/institutions.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -79,11 +81,13 @@ app.use('/api/admin/pendaftaran', adminPendaftaranRoutes);
 app.use('/api/admin/logbook', adminLogbookRoutes);
 app.use('/api/admin/sertifikat', adminSertifikatRoutes);
 app.use('/api/admin/user', adminUserRoutes);
+app.use('/api/admin/institutions', adminInstitutionsRoutes);
 
 // User routes
 app.use('/api/users/pendaftaran', userPendaftaranRoutes);
 app.use('/api/users/logbook', userLogbookRoutes);
 app.use('/api/users/sertifikat', userSertifikatRoutes);
+app.use('/api/users/institutions', userInstitutionsRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {
