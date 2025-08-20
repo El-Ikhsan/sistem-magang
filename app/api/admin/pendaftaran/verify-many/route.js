@@ -1,10 +1,10 @@
+// api/admin/pendaftaran/verify-many/route.js
 import { Axios } from "../../../../utils/axios"; // Sesuaikan path jika perlu
 import { API_ENDPOINTS } from "../../../api"; // Sesuaikan path jika perlu
 import { NextResponse } from "next/server";
 import { isAxiosError } from "axios";
 
 export const POST = async (request) => {
-    // Mengambil token dari Authorization header
     const authHeader = request.headers.get('authorization');
     const token = authHeader?.split(' ')[1];
 
@@ -13,16 +13,14 @@ export const POST = async (request) => {
     }
 
     try {
-        // Mengharapkan body berisi array of IDs: { ids: ["id1", "id2", ...] }
         const { ids } = await request.json();
 
-        // Validasi sederhana untuk memastikan 'ids' adalah array dan tidak kosong
         if (!Array.isArray(ids) || ids.length === 0) {
             return NextResponse.json({ message: "Bad Request: 'ids' must be a non-empty array" }, { status: 400 });
         }
 
-        const response = await Axios.post(API_ENDPOINTS.ADMIN_USERS.DELETE_MANY,
-            { ids }, // Kirim array ids di dalam body request
+        const response = await Axios.post(API_ENDPOINTS.ADMIN_PENDAFTARAN.VERIFY_MANY,
+            { ids },
             {
                 headers: { Authorization: `Bearer ${token}` }
             }
@@ -33,7 +31,7 @@ export const POST = async (request) => {
         if (isAxiosError(err) && err.response) {
             return NextResponse.json(err.response.data, { status: err.response.status });
         }
-        console.error(`[API_ADMIN_USERS_DELETE_MANY]`, err);
-        return NextResponse.json({ message: "Gagal menghapus beberapa user." }, { status: 500 });
+        console.error(`[API_ADMIN_PENDAFTARAN_VERIFY_MANY]`, err);
+        return NextResponse.json({ message: "Gagal memverifikasi beberapa pendaftaran." }, { status: 500 });
     }
 };

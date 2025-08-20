@@ -1,54 +1,60 @@
-// api/admin/users/route.js
 import { Axios } from "../../../utils/axios"; // Sesuaikan path jika perlu
-import { API_ENDPOINTS } from "../../api";
+import { API_ENDPOINTS } from "../../api"; // Pastikan path ini benar
 import { NextResponse } from "next/server";
 import { isAxiosError } from "axios";
 
-/**
- * Handler untuk mengambil semua users.
- * @param {Request} request
- */
 export const GET = async (request) => {
-    const token = request.cookies.get("authToken")?.value;
+    // Mengambil token dari Authorization header
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.split(' ')[1]; // Ekstrak token dari "Bearer <token>"
+
+    // Jika tidak ada token, kembalikan response Unauthorized
     if (!token) {
-        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        return NextResponse.json({ message: "Unauthorized: No token provided in header" }, { status: 401 });
     }
 
     try {
-        const response = await Axios.get(API_ENDPOINTS.USERS, {
+        // Melakukan request GET ke API backend dengan token di header
+        const response = await Axios.get(API_ENDPOINTS.ADMIN_USERS.GET_ALL, {
             headers: { Authorization: `Bearer ${token}` }
         });
+
         return NextResponse.json(response.data);
     } catch (err) {
         if (isAxiosError(err) && err.response) {
             return NextResponse.json(err.response.data, { status: err.response.status });
         }
-        console.error("[API USERS GET ALL]", err);
+        console.error("[API_ADMIN_USERS_GET_ALL]", err);
         return NextResponse.json({ message: "Gagal mengambil data user." }, { status: 500 });
     }
 };
 
-/**
- * Handler untuk membuat user baru.
- * @param {Request} request
- */
 export const POST = async (request) => {
-    const token = request.cookies.get("authToken")?.value;
+    // Mengambil token dari Authorization header
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.split(' ')[1]; // Ekstrak token dari "Bearer <token>"
+
+    // Jika tidak ada token, kembalikan response Unauthorized
     if (!token) {
-        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+        return NextResponse.json({ message: "Unauthorized: No token provided in header" }, { status: 401 });
     }
 
     try {
+        // Mengambil body dari request yang berisi data user baru
         const body = await request.json();
-        const response = await Axios.post(API_ENDPOINTS.USERS, body, {
+
+        // Melakukan request POST ke API backend dengan token di header
+        const response = await Axios.post(API_ENDPOINTS.ADMIN_USERS.CREATE, body, {
             headers: { Authorization: `Bearer ${token}` }
         });
+
+        // Mengembalikan data user yang baru dibuat
         return NextResponse.json(response.data, { status: 201 });
     } catch (err) {
         if (isAxiosError(err) && err.response) {
             return NextResponse.json(err.response.data, { status: err.response.status });
         }
-        console.error("[API USERS POST]", err);
+        console.error("[API_ADMIN_USERS_CREATE]", err);
         return NextResponse.json({ message: "Gagal membuat user." }, { status: 500 });
     }
 };
