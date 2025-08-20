@@ -96,7 +96,7 @@ class SertifikatController {
 
     static async getSertifikatByUserId(req, res, next) {
         try {
-            const { userId } = req.params;
+            const { id } = req.params;
 
             const sertifikats = await db('sertifikat')
                 .select(
@@ -107,7 +107,7 @@ class SertifikatController {
                 )
                 .leftJoin('users', 'sertifikat.user_id', 'users.id')
                 .leftJoin('users as admin', 'sertifikat.issued_by', 'admin.id')
-                .where({ 'sertifikat.user_id': userId })
+                .where({ 'sertifikat.user_id': id })
                 .orderBy('issued_date', 'desc');
 
             res.json({

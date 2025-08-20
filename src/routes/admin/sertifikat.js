@@ -8,28 +8,10 @@ const router = express.Router();
 router.use(authenticate);
 router.use(authorizeRole('admin'));
 
-router.post('/', 
-  uploadSingle('certificate'),
-  SertifikatController.createSertifikat
-);
-
-router.get('/', 
-  SertifikatController.getAllSertifikat
-);
-
-router.post('/delete-many', 
-  SertifikatController.deleteManySertifikat
-);
-
-router.get('/:userId', 
-  SertifikatController.getSertifikatByUserId
-);
-
-router.delete('/:id', 
-  SertifikatController.deleteSertifikat
-);
-
-
-
+router.post('/', uploadSingle('certificate'), SertifikatController.createSertifikat);
+router.get('/', SertifikatController.getAllSertifikat);
+router.post('/delete-many', SertifikatController.deleteManySertifikat);
+router.get('/:id', SertifikatController.getSertifikatByUserId);
+router.delete('/:id', SertifikatController.deleteSertifikat);
 
 export default router;

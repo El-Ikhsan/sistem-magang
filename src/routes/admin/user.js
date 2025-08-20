@@ -4,11 +4,9 @@ import { authorizeRole } from '../../middlewares/roleHandler.js';
 import { authenticate } from '../../middlewares/auth.js';
 
 const router = express.Router();
-
 router.use(authenticate);
 router.use(authorizeRole('admin'))
 
-// Routes
 router.post('/', UserAdminController.createNewUser);
 router.get('/', UserAdminController.getAllUsers);
 router.get('/:id', UserAdminController.getUserById);
