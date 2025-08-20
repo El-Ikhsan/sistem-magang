@@ -60,11 +60,12 @@ class LogbookController {
       await db('logbook').insert(logbookData);
 
       
-      const logbook = await db('logbook')
-        .select('*')
+      const logbook = await db('logbook as l')
+        .leftJoin('users as u', 'l.validated_by', 'u.id')
+        .select('l.*', 'u.name as validated_by_name')
         .where({
-          user_id: req.user.id,
-          tanggal: formattedDate
+          'l.user_id': req.user.id,
+          'l.tanggal': formattedDate
         })
         .first();
 
@@ -83,10 +84,11 @@ class LogbookController {
       const { page = 1, limit = 10, status, month, year } = req.query;
       const offset = (page - 1) * limit;
 
-      let query = db('logbook')
-        .select('*') // 'kehadiran' akan otomatis ikut terseleksi
-        .where({ user_id: req.user.id })
-        .orderBy('tanggal', 'desc');
+      let query = db('logbook as l')
+        .leftJoin('users as u', 'l.validated_by', 'u.id')
+        .select('l.*', 'u.name as validated_by_name') // 'kehadiran' akan otomatis ikut terseleksi
+        .where({ 'l.user_id': req.user.id })
+        .orderBy('l.tanggal', 'desc');
 
       if (status) {
         query = query.where('status', status);
@@ -98,8 +100,22 @@ class LogbookController {
         query = query.whereRaw('YEAR(tanggal) = ?', [year]);
       }
 
-      const totalResult = await query.clone().count('* as count').first();
-      const total = totalResult.count;
+      // Build a separate count query that doesn't include SELECT * or ORDER BY
+      const countQuery = db('logbook').where({ user_id: req.user.id });
+
+      if (status) {
+        countQuery.where('status', status);
+      }
+
+      if (month && year) {
+        countQuery.whereRaw('MONTH(tanggal) = ? AND YEAR(tanggal) = ?', [month, year]);
+      } else if (year) {
+        countQuery.whereRaw('YEAR(tanggal) = ?', [year]);
+      }
+
+      const totalResult = await countQuery.count('* as count').first();
+      const total = totalResult ? parseInt(totalResult.count, 10) : 0;
+
       const logbooks = await query.limit(limit).offset(offset);
 
       res.json({
@@ -171,9 +187,10 @@ class LogbookController {
         .where({ id })
         .update(updateData);
 
-      const updatedLogbook = await db('logbook')
-        .select('*')
-        .where({ id })
+      const updatedLogbook = await db('logbook as l')
+        .leftJoin('users as u', 'l.validated_by', 'u.id')
+        .select('l.*', 'u.name as validated_by_name')
+        .where({ 'l.id': id })
         .first();
 
       res.json({

@@ -11,8 +11,9 @@ export const logbookSchema = Joi.object({
     otherwise: Joi.optional().allow('', null)
   }),
   deskripsi: Joi.string().optional().allow(''), 
-  jam_mulai: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).optional().allow(null),
-  jam_selesai: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).optional().allow(null)
+  // accept HH:mm or HH:mm:ss
+  jam_mulai: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/).optional().allow(null),
+  jam_selesai: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/).optional().allow(null)
 });
 
 export const updateLogbookSchema = Joi.object({
@@ -20,8 +21,9 @@ export const updateLogbookSchema = Joi.object({
   tanggal: Joi.date().iso().optional(),
   kegiatan: Joi.string().min(5).max(500).optional().allow('', null),
   deskripsi: Joi.string().optional().allow(''),
-  jam_mulai: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).optional().allow(null),
-  jam_selesai: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/).optional().allow(null)
+  // accept HH:mm or HH:mm:ss (same as create schema)
+  jam_mulai: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/).optional().allow(null),
+  jam_selesai: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/).optional().allow(null)
 }).min(1);
 
 export const deleteManySchema = Joi.object({
