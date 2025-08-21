@@ -1,0 +1,28 @@
+names:
+- agama
+- alamat
+- berlaku_hingga
+- gol_darah
+- jk
+- kecamatan
+- kel_desa
+- kwg
+- nama
+- nik
+- pekerjaan
+- perkawinan
+- prov_kab
+- rt_rw
+- tempat_diterbitkan
+- tgl_diterbitkan
+- ttl
+nc: 17
+roboflow:
+  license: CC BY 4.0
+  project: ktp-object-detection-efgu1
+  url: https://universe.roboflow.com/ktpmagang/ktp-object-detection-efgu1/dataset/1
+  version: 1
+  workspace: ktpmagang
+test: ../test/images
+train: ../train/images
+val: ../valid/images
