@@ -13,7 +13,7 @@ const loginSchema = Joi.object({
 
 const updateSchema = Joi.object({
   name: Joi.string().min(2).max(100).optional(),
-  avatar_url: Joi.string().optional()
+  email: Joi.string().email().optional()
 });
 
 export { registerSchema, loginSchema, updateSchema };

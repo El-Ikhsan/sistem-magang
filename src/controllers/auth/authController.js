@@ -217,7 +217,7 @@ static async logout(req, res, next) {
         });
       }
 
-      const { name, email, phone } = value;
+      const { name, email } = value;
       let avatar_url = null;
 
       if (email) {
@@ -256,7 +256,7 @@ static async logout(req, res, next) {
         avatar_url = `${process.env.MINIO_PUBLIC_URL}/${bucketName}/${objectName}`;
       }
       
-      const updateData = { name, email, phone };
+      const updateData = { name, email };
       if (avatar_url) {
         updateData.avatar_url = avatar_url;
       }
