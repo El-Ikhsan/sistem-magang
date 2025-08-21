@@ -1,50 +1,56 @@
 import { db } from '../../../config/database.js';
-import { institutionSchema } from '../../validation/users/institutionsValidation.js';
+import { institutionSchema, updateInstitutionSchema } from '../../validation/users/institutionsValidation.js';
 
 class InstitutionsController {
   static async createInstitution(req, res, next) {
-    try {
-      const { error, value } = institutionSchema.validate(req.body);
+      try {
+        const user_id = req.user.id;
+        const { error, value } = institutionSchema.validate(req.body);
+  
+        const { type, name, email, address, lecturer_name, whatsapp_supervisor, student_id_number } = value;
+        
+        if (error) {
+          return res.status(400).json({
+            success: false,
+            message: 'Validation error',
+            details: error.details.map(detail => detail.message)
+          });
+        }
+  
+  
+        const institutionData = {
+          user_id,
+          type,
+          name,
+          email,
+          address,
+          lecturer_name,
+          whatsapp_supervisor,
+          student_id_number,
+        };
+  
+        await db('institutions').insert(institutionData);
 
-      const { user_id, type, name, email, address, lecturer_name, whatsapp_supervisor, student_id_number } = value;
-      
-      if (error) {
-        return res.status(400).json({
-          success: false,
-          message: 'Validation error',
-          details: error.details.map(detail => detail.message)
+        const newInstitution = await db('institutions')
+          .where({ user_id })
+          .first();
+        
+          console.log(newInstitution);
+
+        res.status(201).json({
+          success: true,
+          message: 'Institution created successfully',
+          data: newInstitution,
         });
+      } catch (error) {
+        next(error);
       }
-
-
-      const institutionData = {
-        user_id,
-        type,
-        name,
-        email,
-        address,
-        lecturer_name,
-        whatsapp_supervisor,
-        student_id_number,
-      };
-
-      const [newInstitution] = await db('institutions').insert(institutionData).returning('*');
-
-      res.status(201).json({
-        success: true,
-        message: 'Institution created successfully',
-        data: newInstitution,
-      });
-    } catch (error) {
-      next(error);
     }
-  }
 
   static async getInstitutionById(req, res, next) {
     try {
-      const { id } = req.params;
 
-      const institution = await db('institutions').where({ id, user_id: req.user.id }).first();
+      const institution = await db('institutions').where({ user_id: req.user.id }).first();
 
       if (!institution) {
         return res.status(404).json({
@@ -65,8 +71,7 @@ class InstitutionsController {
 
   static async updateInstitution(req, res, next) {
     try {
-      const { id } = req.params;
-      const institution = await db('institutions').where({ id, user_id: req.user.id }).first();
+      const institution = await db('institutions').where({ user_id: req.user.id }).first();
 
       if (!institution) {
         return res.status(404).json({
@@ -75,11 +80,18 @@ class InstitutionsController {
         });
       }
 
-      const updatedData = req.body;
+      const { error, value } = updateInstitutionSchema.validate(req.body);
+      if (error) {
+        return res.status(400).json({
+          success: false,
+          message: 'Validation error',
+          details: error.details.map(detail => detail.message)
+        });
+      }      
 
-      await db('institutions').where({ id }).update(updatedData);
+      await db('institutions').where({ user_id: req.user.id }).update(value);
 
-      const updatedInstitution = await db('institutions').where({ id }).first();
+      const updatedInstitution = await db('institutions').where({ user_id: req.user.id }).first();
 
       res.json({
         success: true,
@@ -93,9 +105,7 @@ class InstitutionsController {
 
   static async deleteInstitution(req, res, next) {
     try {
-      const { id } = req.params;
-
-      const institution = await db('institutions').where({ id, user_id: req.user.id }).first();
+      const institution = await db('institutions').where({ user_id: req.user.id }).first();
 
       if (!institution) {
         return res.status(404).json({
@@ -104,7 +114,7 @@ class InstitutionsController {
         });
       }
 
-      await db('institutions').where({ id }).del();
+      await db('institutions').where({ user_id: req.user.id }).del();
 
       res.status(200).json({
         success: true,

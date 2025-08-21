@@ -5,7 +5,7 @@
 export const up = function (knex) {
     return knex.schema.createTable("institutions", (table) => {
     table.uuid("id").primary().defaultTo(knex.raw("(UUID())"));
-    table.string('user_id', 36).notNullable();
+    table.string('user_id', 36).notNullable().unique();;
     table
       .enum("type", ["universitas", "SMA", "Politeknik", "SMK", "lainnya"])
       .notNullable();

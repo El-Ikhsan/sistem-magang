@@ -8,8 +8,8 @@ router.use(authenticate);
 router.use(authorizeRole('user'));
 
 router.post('/', InstitutionsController.createInstitution);
-router.get('/:id', InstitutionsController.getInstitutionById);
-router.patch('/:id', InstitutionsController.updateInstitution);
-router.delete('/:id', InstitutionsController.deleteInstitution);
+router.get('/', InstitutionsController.getInstitutionById);
+router.patch('/', InstitutionsController.updateInstitution);
+router.delete('/', InstitutionsController.deleteInstitution);
 
 export default router;

@@ -7,7 +7,6 @@ const router = express.Router();
 router.use(authenticate);
 router.use(authorizeRole('admin'));
 
-router.post('/', InstitutionsController.createInstitution);
 router.get('/', InstitutionsController.getInstitutions);
 router.get('/:id', InstitutionsController.getInstitutionById);
 router.patch('/:id', InstitutionsController.updateInstitution);
