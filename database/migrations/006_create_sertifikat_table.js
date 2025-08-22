@@ -6,17 +6,18 @@ export const up = function(knex) {
   return knex.schema.createTable('sertifikat', function(table) {
     table.uuid("id").primary().defaultTo(knex.raw("(UUID())"));
     table.string('user_id', 36).notNullable();
-    table.string('certificate_number', 100).unique().notNullable();
+    table.string('certificate_prefix', 50).notNullable();
+    table.integer('certificate_sequence').unsigned().notNullable();
     table.string('file_url').notNullable();
     table.text('description');
     table.date('issued_date').notNullable();
     table.string('issued_by', 36).notNullable();
     table.timestamps(true, true);
 
+    table.unique(['certificate_prefix', 'certificate_sequence']);
     table.foreign('user_id').references('id').inTable('users').onDelete('CASCADE');
     table.foreign('issued_by').references('id').inTable('users');
     table.index(['user_id']);
-    table.index(['certificate_number']);
   });
 };
 

@@ -17,6 +17,7 @@ import adminLogbookRoutes from './src/routes/admin/logbook.js';
 import adminSertifikatRoutes from './src/routes/admin/sertifikat.js';
 import adminUserRoutes from './src/routes/admin/user.js';
 import adminInstitutionsRoutes from './src/routes/admin/institutions.js';
+import adminSertifikatConfigRoutes from './src/routes/admin/sertifikatConfig.js';
 
 // users
 import userPendaftaranRoutes from './src/routes/users/pendaftaran.js';
@@ -79,6 +80,7 @@ app.use('/api/auth', authLimiter, authRoutes);
 // Admin routes
 app.use('/api/admin/pendaftaran', adminPendaftaranRoutes);
 app.use('/api/admin/logbook', adminLogbookRoutes);
+app.use('/api/admin/sertifikat/config', adminSertifikatConfigRoutes);
 app.use('/api/admin/sertifikat', adminSertifikatRoutes);
 app.use('/api/admin/user', adminUserRoutes);
 app.use('/api/admin/institutions', adminInstitutionsRoutes);
