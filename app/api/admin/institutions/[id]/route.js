@@ -1,7 +1,7 @@
 // api/institutions/[id]/route.js
 import { NextResponse } from "next/server";
-import { Axios } from "../../../../../utils/axios"; // Sesuaikan path jika perlu
-import { API_ENDPOINTS } from "../../../../api"; // Sesuaikan path jika perlu
+import { Axios } from "../../../../utils/axios"; // Sesuaikan path jika perlu
+import { API_ENDPOINTS } from "../../../api"; // Sesuaikan path jika perlu
 import { isAxiosError } from "axios";
 
 /**
@@ -10,8 +10,8 @@ import { isAxiosError } from "axios";
  * @param {object} context - Berisi parameter dari URL
  */
 export const GET = async (request, context) => {
-    // --- PERBAIKAN DI SINI: Menghapus 'await' ---
-    const { id } = context.params;
+    // --- PERBAIKAN DI SINI ---
+    const { id } = await context.params;
     const authHeader = request.headers.get('authorization');
     const token = authHeader?.split(' ')[1];
 
@@ -39,8 +39,8 @@ export const GET = async (request, context) => {
  * @param {object} context - Berisi parameter dari URL
  */
 export const PATCH = async (request, context) => {
-    // --- PERBAIKAN DI SINI: Menghapus 'await' ---
-    const { id } = context.params;
+    // --- PERBAIKAN DI SINI ---
+    const { id } = await context.params;
     const authHeader = request.headers.get('authorization');
     const token = authHeader?.split(' ')[1];
 
@@ -69,8 +69,8 @@ export const PATCH = async (request, context) => {
  * @param {object} context - Berisi parameter dari URL
  */
 export const DELETE = async (request, context) => {
-    // --- PERBAIKAN DI SINI: Menghapus 'await' ---
-    const { id } = context.params;
+    // --- PERBAIKAN DI SINI ---
+    const { id } = await context.params;
     const authHeader = request.headers.get('authorization');
     const token = authHeader?.split(' ')[1];
 

@@ -14,7 +14,7 @@ export async function POST(request) {
     try {
         // Panggil backend utama, kirimkan refresh token dalam header 'Cookie'
         const response = await Axios.post(
-            API_ENDPOINTS.REFRESH_TOKEN, {}, {
+            API_ENDPOINTS.AUTH.REFRESH_TOKEN, {}, {
                 headers: {
                     // Set header Cookie secara manual
                     'Cookie': `refreshToken=${refreshToken}`

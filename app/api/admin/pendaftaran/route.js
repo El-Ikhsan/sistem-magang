@@ -1,6 +1,6 @@
 // api/admin/pendaftaran/route.js
-import { Axios } from "../../../../utils/axios"; // Sesuaikan path jika perlu
-import { API_ENDPOINTS } from "../../../api"; // Sesuaikan path jika perlu
+import { Axios } from "../../../utils/axios"; // Sesuaikan path jika perlu
+import { API_ENDPOINTS } from "../../api"; // Sesuaikan path jika perlu
 import { NextResponse } from "next/server";
 import { isAxiosError } from "axios";
 

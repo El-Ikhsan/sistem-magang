@@ -13,7 +13,7 @@ export async function DELETE(request) {
 
         if (accessToken) {
             // Panggil backend utama menggunakan accessToken di header Authorization
-            await Axios.delete(API_ENDPOINTS.LOGOUT, { // Body bisa kosong jika tidak dibutuhkan
+            await Axios.delete(API_ENDPOINTS.AUTH.LOGOUT, { // Body bisa kosong jika tidak dibutuhkan
                 headers: {
                     'Authorization': `Bearer ${accessToken}`
                 }

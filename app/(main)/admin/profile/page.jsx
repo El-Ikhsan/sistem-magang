@@ -5,10 +5,14 @@ import { Card } from 'primereact/card';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { Avatar } from 'primereact/avatar';
+import { FileUpload } from 'primereact/fileupload';
 import { Toast } from 'primereact/toast';
 import { Dialog } from 'primereact/dialog';
-import { useAuth } from "../../../../layout/context/AuthContext";
+import { useAuth } from "../../../../layout/context/AuthContext"; // Sesuaikan path jika perlu
 
+// --- KOMPONЕН ANAK ---
+
+// 1. Komponen Popup untuk Upload Avatar
 const AvatarUploadDialog = ({ visible, onHide, onConfirmUpload }) => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
@@ -17,14 +21,18 @@ const AvatarUploadDialog = ({ visible, onHide, onConfirmUpload }) => {
 
     const handleFileSelect = (file) => {
         if (file) {
+            // Validasi file type
             if (!file.type.startsWith('image/')) {
                 alert('Hanya file gambar yang diperbolehkan');
                 return;
             }
+
+            // Validasi file size (max 2MB)
             if (file.size > 2 * 1024 * 1024) {
                 alert('Ukuran file maksimal 2MB');
                 return;
             }
+
             setSelectedFile(file);
             setPreviewUrl(URL.createObjectURL(file));
         }
@@ -33,6 +41,7 @@ const AvatarUploadDialog = ({ visible, onHide, onConfirmUpload }) => {
     const handleDrop = (e) => {
         e.preventDefault();
         setIsDragging(false);
+
         const files = e.dataTransfer.files;
         if (files.length > 0) {
             handleFileSelect(files[0]);
@@ -104,6 +113,7 @@ const AvatarUploadDialog = ({ visible, onHide, onConfirmUpload }) => {
             className="avatar-upload-dialog"
         >
             <div className="flex flex-column gap-3">
+                {/* Preview Area */}
                 <div className="text-center">
                     <div
                         className={`preview-container ${isDragging ? 'dragging' : ''} ${previewUrl ? 'has-image' : ''}`}
@@ -148,6 +158,8 @@ const AvatarUploadDialog = ({ visible, onHide, onConfirmUpload }) => {
                         )}
                     </div>
                 </div>
+
+                {/* File Input (Hidden) */}
                 <input
                     ref={fileInputRef}
                     type="file"
@@ -155,6 +167,8 @@ const AvatarUploadDialog = ({ visible, onHide, onConfirmUpload }) => {
                     onChange={handleFileInputChange}
                     style={{ display: 'none' }}
                 />
+
+                {/* Action Buttons */}
                 {previewUrl && (
                     <div className="flex justify-content-center gap-2">
                         <Button
@@ -177,6 +191,7 @@ const AvatarUploadDialog = ({ visible, onHide, onConfirmUpload }) => {
                         />
                     </div>
                 )}
+
                 {!previewUrl && (
                     <div className="text-center">
                         <Button
@@ -236,7 +251,7 @@ const ProfileInformationForm = ({ formData, handleInputChange, onUpdate, loading
 );
 
 // --- KOMPONEN UTAMA ---
-const UserProfile = () => {
+const AdminProfile = () => {
     const { accessToken, user, refreshUserData } = useAuth();
     const toast = useRef(null);
     const [formData, setFormData] = useState({});
@@ -271,7 +286,8 @@ const UserProfile = () => {
         avatarFormData.append('avatar', file);
 
         try {
-            await fetch('/api/user/profile', {
+            // Menggunakan endpoint admin
+            await fetch('/api/admin/profile', {
                 method: 'PATCH',
                 headers: { 'Authorization': `Bearer ${accessToken}` },
                 body: avatarFormData
@@ -291,7 +307,8 @@ const UserProfile = () => {
         dataToUpdate.append('name', formData.name);
         dataToUpdate.append('email', formData.email);
         try {
-            await fetch('/api/user/profile', { method: 'PATCH', headers: { 'Authorization': `Bearer ${accessToken}` }, body: dataToUpdate });
+            // Menggunakan endpoint admin
+            await fetch('/api/admin/profile', { method: 'PATCH', headers: { 'Authorization': `Bearer ${accessToken}` }, body: dataToUpdate });
             toast.current.show({ severity: 'success', summary: 'Berhasil', detail: 'Informasi pribadi berhasil diperbarui' });
             await refreshUserData();
         } catch (error) {
@@ -330,10 +347,11 @@ const UserProfile = () => {
                     setIsAvatarDialogOpen(false);
                     setAvatarPreview(null);
                 }}
+                onFileSelect={(file) => setAvatarPreview(URL.createObjectURL(file))}
                 onConfirmUpload={handleConfirmAvatarUpload}
             />
         </div>
     );
 };
 
-export default UserProfile;
+export default AdminProfile;

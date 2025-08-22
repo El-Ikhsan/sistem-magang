@@ -7,7 +7,7 @@ export async function POST(request) {
     try {
         const { email, password } = await request.json();
         // Panggil backend utama untuk login
-        const response = await Axios.post(API_ENDPOINTS.LOGINUSERS, { email, password });
+        const response = await Axios.post(API_ENDPOINTS.AUTH.LOGIN, { email, password });
 
         const responseData = response.data;
 

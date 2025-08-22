@@ -4,8 +4,8 @@ import { API_ENDPOINTS } from "../../../../api"; // Sesuaikan path jika perlu
 import { NextResponse } from "next/server";
 import { isAxiosError } from "axios";
 
-export const PATCH = async (request, { params }) => {
-    const { id } = params;
+export const PATCH = async (request, context)  => {
+    const { id } = await context.params;
 
     const authHeader = request.headers.get('authorization');
     const token = authHeader?.split(' ')[1];

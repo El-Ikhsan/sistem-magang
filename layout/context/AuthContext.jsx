@@ -10,7 +10,7 @@ const AuthContext = createContext(null);
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [accessToken, setAccessToken] = useState(null);
-    const [loading, setLoading] = useState(true); // Untuk loading awal saat cek sesi
+    const [loading, setLoading] = useState(true);
     const router = useRouter();
 
     // Fungsi untuk login
@@ -63,6 +63,27 @@ export const AuthProvider = ({ children }) => {
     }
 };
 
+const refreshUserData = useCallback(async () => {
+    const currentToken = accessToken;
+    if (!currentToken) return;
+
+    const endpoint = user.role === 'admin' ? '/api/admin/profile' : '/api/user/profile';
+
+    try {
+        const res = await fetch(endpoint, {
+            headers: { 'Authorization': `Bearer ${currentToken}` }
+        });
+        const result = await res.json();
+        if (res.ok) {
+            setUser(result.data.user); // Update state user secara global
+        } else {
+            console.error("Failed to refresh user data from:", endpoint);
+        }
+    } catch (error) {
+        console.error("Error refreshing user data:", error);
+    }
+}, [accessToken, user]); // Tambahkan 'user' sebagai dependency
+
     // Cek sesi saat aplikasi pertama kali dimuat
     const checkUserSession = useCallback(async () => {
         try {
@@ -101,7 +122,9 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     useEffect(() => {
-        checkUserSession();
+        if (!accessToken) {
+            checkUserSession();
+        }
     }, [checkUserSession]);
 
 
@@ -111,6 +134,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         login,
         logout,
+        refreshUserData
     };
 
         return (

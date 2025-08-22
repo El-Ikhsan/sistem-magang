@@ -38,6 +38,12 @@ const AppMenu = () => {
                         { label: "Logbook", icon: "pi pi-fw pi-book", to: "/admin/logbook" },
                         { label: "Sertifikat", icon: "pi pi-fw pi-award", to: "/admin/sertifikat" }
                     ]
+                },
+                {
+                    label: "PROFIL",
+                    items: [
+                        { label: "Profil Saya", icon: "pi pi-fw pi-user", to: "/admin/profile" }
+                    ]
                 }
             ]);
         } else if (userRole === "user") {

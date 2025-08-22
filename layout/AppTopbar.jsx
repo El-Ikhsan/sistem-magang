@@ -105,7 +105,7 @@ const AppTopbar = forwardRef((props, ref) => {
 
                     {isProfileDropdownOpen && (
                         <div ref={topbarmenuRef} className="profile-dropdown">
-                            <Link href="/profile" className="dropdown-item" onClick={toggleProfileDropdown}>
+                            <Link href={`/${user.role}/profile`}  className="dropdown-item" onClick={toggleProfileDropdown}>
                                 <i className="pi pi-user"></i>
                                 <span>My Profile</span>
                             </Link>

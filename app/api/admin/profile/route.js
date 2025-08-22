@@ -1,17 +1,19 @@
 import { NextResponse } from "next/server";
-import { Axios } from "../../utils/axios";
-import { API_ENDPOINTS } from "../api";
+import { Axios } from "../../../utils/axios"; // Sesuaikan path jika perlu
+import { API_ENDPOINTS } from "../../api"; // Sesuaikan path jika perlu
 import { isAxiosError } from "axios";
 
 export const GET = async (request) => {
     try {
-        const token = request.cookies.get("authToken")?.value;
+        // Mengambil token dari Authorization header
+        const authHeader = request.headers.get('authorization');
+        const token = authHeader?.split(' ')[1];
 
         if (!token) {
             return NextResponse.json({ success: false, message: "Unauthorized", data: null }, { status: 401 });
         }
 
-        const response = await Axios.get(API_ENDPOINTS.PROFILE, {
+        const response = await Axios.get(API_ENDPOINTS.AUTH.PROFILE, {
             headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -27,7 +29,10 @@ export const GET = async (request) => {
 
 export const PATCH = async (request) => {
     try {
-        const token = request.cookies.get("authToken")?.value;
+        // Mengambil token dari Authorization header
+        const authHeader = request.headers.get('authorization');
+        const token = authHeader?.split(' ')[1];
+
         if (!token) {
             return NextResponse.json(
                 {
@@ -42,7 +47,7 @@ export const PATCH = async (request) => {
         const formData = await request.formData();
 
         // Kirim ke API backend
-        const response = await Axios.patch(API_ENDPOINTS.PROFILE, formData, {
+        const response = await Axios.patch(API_ENDPOINTS.AUTH.PROFILE, formData, {
             headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "multipart/form-data"
